@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Practice Exam — CCAF</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">CCAF <span>Study Hub</span></a>
+  <ul class="topnav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="study.html">Study Guide</a></li>
+    <li><a href="exam.html" class="active">Practice Exam</a></li>
+  </ul>
+</nav>
+
+<div class="exam-container">
+  <div class="exam-header">
+    <h1 style="font-size:1.5rem;margin:0;">Practice Exam</h1>
+    <span class="text-muted text-sm">Click an option to see the explanation. All sample questions from the official guide are included.</span>
+  </div>
+
+  <div class="exam-controls">
+    <label for="domain-filter">Domain:</label>
+    <select id="domain-filter">
+      <option value="all">All Domains</option>
+      <option value="1">D1 · Agentic Architecture (27%)</option>
+      <option value="2">D2 · Tool Design &amp; MCP (18%)</option>
+      <option value="3">D3 · Claude Code Config (20%)</option>
+      <option value="4">D4 · Prompt Engineering (20%)</option>
+      <option value="5">D5 · Context &amp; Reliability (15%)</option>
+    </select>
+    <label for="shuffle-toggle" style="display:flex;align-items:center;gap:0.375rem;cursor:pointer;">
+      <input type="checkbox" id="shuffle-toggle" checked style="cursor:pointer;"> Shuffle
+    </label>
+    <button class="btn btn-secondary" id="restart-btn">↺ Restart</button>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <span class="score-badge" id="score-display">0 / 0</span>
+  </div>
+
+  <div id="question-area"></div>
+  <div class="exam-nav">
+    <button class="btn btn-secondary" id="prev-btn" disabled>← Prev</button>
+    <span id="q-counter" class="text-muted text-sm"></span>
+    <button class="btn btn-primary" id="next-btn" disabled>Next →</button>
+  </div>
+  <div id="results-area" style="display:none;"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  // ═══ DOMAIN 1 ═══
+  {
+    id: 1, domain: 1, scenario: "Customer Support Resolution Agent",
+    official: true,
+    question: "Production data shows that in 12% of cases, your agent skips get_customer entirely and calls lookup_order using only the customer's stated name, occasionally leading to misidentified accounts and incorrect refunds. What change would most effectively address this reliability issue?",
+    options: [
+      { id: 'A', text: "Add a programmatic prerequisite that blocks lookup_order and process_refund calls until get_customer has returned a verified customer ID." },
+      { id: 'B', text: "Enhance the system prompt to state that customer verification via get_customer is mandatory before any order operations." },
+      { id: 'C', text: "Add few-shot examples showing the agent always calling get_customer first, even when customers volunteer order details." },
+      { id: 'D', text: "Implement a routing classifier that analyzes each request and enables only the subset of tools appropriate for that request type." }
+    ],
+    correct: 'A',
+    explanation: "When a specific tool sequence is required for critical business logic (like verifying customer identity before processing refunds), programmatic enforcement provides deterministic guarantees that prompt-based approaches cannot. Options B and C rely on probabilistic LLM compliance, which is insufficient when errors have financial consequences. Option D addresses tool availability rather than tool ordering, which is not the actual problem.",
+    whyWrong: {
+      B: "Prompt instructions have a non-zero failure rate — as shown by the existing 12% skip rate. This is still probabilistic compliance.",
+      C: "Few-shot examples improve consistency but cannot guarantee zero-failure compliance for a safety-critical financial operation.",
+      D: "A routing classifier controls which tools are available, but the problem is the agent calling them in the wrong ORDER, not having access to the wrong tools."
+    },
+    studyLinks: [{ text: "Programmatic Enforcement", anchor: "d1-enforcement" }],
+    docLinks: []
+  },
+  {
+    id: 2, domain: 2, scenario: "Customer Support Resolution Agent",
+    official: true,
+    question: "Production logs show the agent frequently calls get_customer when users ask about orders (e.g., 'check my order #12345'), instead of calling lookup_order. Both tools have minimal descriptions ('Retrieves customer information' / 'Retrieves order details') and accept similar identifier formats. What's the most effective first step to improve tool selection reliability?",
+    options: [
+      { id: 'A', text: "Add few-shot examples to the system prompt demonstrating correct tool selection patterns, with 5-8 examples showing order-related queries routing to lookup_order." },
+      { id: 'B', text: "Expand each tool's description to include input formats it handles, example queries, edge cases, and boundaries explaining when to use it versus similar tools." },
+      { id: 'C', text: "Implement a routing layer that parses user input before each turn and pre-selects the appropriate tool based on detected keywords and identifier patterns." },
+      { id: 'D', text: "Consolidate both tools into a single lookup_entity tool that accepts any identifier and internally determines which backend to query." }
+    ],
+    correct: 'B',
+    explanation: "Tool descriptions are the primary mechanism LLMs use for tool selection. When descriptions are minimal, models lack the context to differentiate between similar tools. Option B directly addresses this root cause with a low-effort, high-leverage fix. Few-shot examples (A) add token overhead without fixing the underlying issue. A routing layer (C) is over-engineered and bypasses the LLM's natural language understanding. Consolidating tools (D) is a valid architectural choice but requires more effort than a 'first step' warrants when the immediate problem is inadequate descriptions.",
+    whyWrong: {
+      A: "Few-shot examples help but don't fix the root cause — poor tool descriptions. Better descriptions are the right first step, lower effort, and more maintainable.",
+      C: "Over-engineered solution that bypasses Claude's natural language capabilities. Keyword-based routing is brittle and harder to maintain than good descriptions.",
+      D: "Consolidation is a valid long-term architectural option but requires significant refactoring, not a quick first fix for a tool selection reliability issue."
+    },
+    studyLinks: [{ text: "Tool Interface Design", anchor: "d2-tool-design" }],
+    docLinks: [{ text: "Tool Use Guide", url: "https://docs.anthropic.com/en/docs/build-with-claude/tool-use" }]
+  },
+  {
+    id: 3, domain: 5, scenario: "Customer Support Resolution Agent",
+    official: true,
+    question: "Your agent achieves 55% first-contact resolution, well below the 80% target. Logs show it escalates straightforward cases (standard damage replacements with photo evidence) while attempting to autonomously handle complex situations requiring policy exceptions. What's the most effective way to improve escalation calibration?",
+    options: [
+      { id: 'A', text: "Add explicit escalation criteria to your system prompt with few-shot examples demonstrating when to escalate versus resolve autonomously." },
+      { id: 'B', text: "Have the agent self-report a confidence score (1-10) before each response and automatically route requests to humans when confidence falls below a threshold." },
+      { id: 'C', text: "Deploy a separate classifier model trained on historical tickets to predict which requests need escalation before the main agent begins processing." },
+      { id: 'D', text: "Implement sentiment analysis to detect customer frustration levels and automatically escalate when negative sentiment exceeds a threshold." }
+    ],
+    correct: 'A',
+    explanation: "Adding explicit escalation criteria with few-shot examples directly addresses the root cause: unclear decision boundaries. This is the proportionate first response before adding infrastructure. Option B fails because LLM self-reported confidence is poorly calibrated — the agent is already incorrectly confident on hard cases. Option C is over-engineered, requiring labeled data and ML infrastructure when prompt optimization hasn't been tried. Option D solves a different problem entirely; sentiment doesn't correlate with case complexity, which is the actual issue.",
+    whyWrong: {
+      B: "Self-reported confidence from LLMs is poorly calibrated. The agent is already miscalibrated — having it report its own (wrong) confidence just encodes the same errors.",
+      C: "Requires labeled training data and additional ML infrastructure. This is premature optimization before trying explicit prompt-based escalation criteria.",
+      D: "Sentiment and case complexity are independent. A calm, polite customer may have an exceptionally complex policy exception case. Sentiment is the wrong signal."
+    },
+    studyLinks: [{ text: "Escalation Patterns", anchor: "d5-escalation" }],
+    docLinks: []
+  },
+  {
+    id: 4, domain: 3, scenario: "Code Generation with Claude Code",
+    official: true,
+    question: "You want to create a custom /review slash command that runs your team's standard code review checklist. This command should be available to every developer when they clone or pull the repository. Where should you create this command file?",
+    options: [
+      { id: 'A', text: "In the .claude/commands/ directory in the project repository." },
+      { id: 'B', text: "In ~/.claude/commands/ in each developer's home directory." },
+      { id: 'C', text: "In the CLAUDE.md file at the project root." },
+      { id: 'D', text: "In a .claude/config.json file with a commands array." }
+    ],
+    correct: 'A',
+    explanation: "Project-scoped custom slash commands should be stored in the .claude/commands/ directory within the repository. These commands are version-controlled and automatically available to all developers when they clone or pull the repo. Option B (~/.claude/commands/) is for personal commands that aren't shared via version control. Option C (CLAUDE.md) is for project instructions and context, not command definitions. Option D describes a configuration mechanism that doesn't exist in Claude Code.",
+    whyWrong: {
+      B: "User-scoped commands in ~/.claude/commands/ are personal and NOT shared when someone clones the repository. Each developer would need to create it manually.",
+      C: "CLAUDE.md is for always-loaded context and instructions, not for defining slash commands.",
+      D: ".claude/config.json with a commands array is not a real Claude Code configuration mechanism."
+    },
+    studyLinks: [{ text: "Commands & Skills", anchor: "d3-commands" }],
+    docLinks: [{ text: "Claude Code Slash Commands", url: "https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/slash-commands" }]
+  },
+  {
+    id: 5, domain: 3, scenario: "Code Generation with Claude Code",
+    official: true,
+    question: "You've been assigned to restructure the team's monolithic application into microservices. This will involve changes across dozens of files and requires decisions about service boundaries and module dependencies. Which approach should you take?",
+    options: [
+      { id: 'A', text: "Enter plan mode to explore the codebase, understand dependencies, and design an implementation approach before making changes." },
+      { id: 'B', text: "Start with direct execution and make changes incrementally, letting the implementation reveal the natural service boundaries." },
+      { id: 'C', text: "Use direct execution with comprehensive upfront instructions detailing exactly how each service should be structured." },
+      { id: 'D', text: "Begin in direct execution mode and only switch to plan mode if you encounter unexpected complexity during implementation." }
+    ],
+    correct: 'A',
+    explanation: "Plan mode is designed for complex tasks involving large-scale changes, multiple valid approaches, and architectural decisions — exactly what monolith-to-microservices restructuring requires. It enables safe codebase exploration and design before committing to changes. Option B risks costly rework when dependencies are discovered late. Option C assumes you already know the right structure without exploring the code. Option D ignores that the complexity is already stated in the requirements, not something that might emerge later.",
+    whyWrong: {
+      B: "Incremental execution without planning risks discovering fundamental dependency conflicts after many files have already been changed, requiring costly rework.",
+      C: "You cannot write comprehensive upfront instructions for an architectural decision without first understanding the existing codebase — that's what plan mode is for.",
+      D: "The complexity is already known (dozens of files, architectural decisions). Don't wait for it to emerge — plan mode is warranted from the start."
+    },
+    studyLinks: [{ text: "Plan Mode vs Direct Execution", anchor: "d3-planmode" }],
+    docLinks: []
+  },
+  {
+    id: 6, domain: 3, scenario: "Code Generation with Claude Code",
+    official: true,
+    question: "Your codebase has distinct areas with different coding conventions: React components use functional style with hooks, API handlers use async/await with specific error handling, and database models follow a repository pattern. Test files are spread throughout the codebase alongside the code they test (e.g., Button.test.tsx next to Button.tsx), and you want all tests to follow the same conventions regardless of location. What's the most maintainable way to ensure Claude automatically applies the correct conventions when generating code?",
+    options: [
+      { id: 'A', text: "Create rule files in .claude/rules/ with YAML frontmatter specifying glob patterns to conditionally apply conventions based on file paths." },
+      { id: 'B', text: "Consolidate all conventions in the root CLAUDE.md file under headers for each area, relying on Claude to infer which section applies." },
+      { id: 'C', text: "Create skills in .claude/skills/ for each code type that include the relevant conventions in their SKILL.md files." },
+      { id: 'D', text: "Place a separate CLAUDE.md file in each subdirectory containing that area's specific conventions." }
+    ],
+    correct: 'A',
+    explanation: ".claude/rules/ with glob patterns (e.g., **/*.test.tsx) allows conventions to be automatically applied based on file paths regardless of directory location — essential for test files spread throughout the codebase. Option B relies on inference rather than explicit matching, making it unreliable. Option C requires manual skill invocation or relies on Claude choosing to load them, contradicting the need for deterministic 'automatic' application based on file paths. Option D can't easily handle files spread across many directories since CLAUDE.md files are directory-bound.",
+    whyWrong: {
+      B: "A monolithic CLAUDE.md with inferred section relevance is unreliable. Claude must infer which section applies, and for cross-directory concerns this inference is error-prone.",
+      C: "Skills are invoked on-demand, not automatically based on file paths. They don't provide the deterministic path-based activation that the question requires.",
+      D: "Directory-bound CLAUDE.md files can't handle test conventions for files spread across the entire codebase — the tests next to each component would be in different directories."
+    },
+    studyLinks: [{ text: "Path-Specific Rules", anchor: "d3-rules" }],
+    docLinks: []
+  },
+  {
+    id: 7, domain: 1, scenario: "Multi-Agent Research System",
+    official: true,
+    question: "After running the system on 'impact of AI on creative industries,' you observe that each subagent completes successfully: the web search agent finds relevant articles, the document analysis agent summarizes papers correctly, and the synthesis agent produces coherent output. However, the final reports cover only visual arts, completely missing music, writing, and film production. The coordinator's logs show it decomposed the topic into three subtasks: 'AI in digital art creation,' 'AI in graphic design,' and 'AI in photography.' What is the most likely root cause?",
+    options: [
+      { id: 'A', text: "The synthesis agent lacks instructions for identifying coverage gaps in the findings it receives from other agents." },
+      { id: 'B', text: "The coordinator agent's task decomposition is too narrow, resulting in subagent assignments that don't cover all relevant domains of the topic." },
+      { id: 'C', text: "The web search agent's queries are not comprehensive enough and need to be expanded to cover more creative industry sectors." },
+      { id: 'D', text: "The document analysis agent is filtering out sources related to non-visual creative industries due to overly restrictive relevance criteria." }
+    ],
+    correct: 'B',
+    explanation: "The coordinator's logs reveal the root cause directly: it decomposed 'creative industries' into only visual arts subtasks (digital art, graphic design, photography), completely omitting music, writing, and film. The subagents executed their assigned tasks correctly — the problem is what they were assigned. Options A, C, and D incorrectly blame downstream agents that are working correctly within their assigned scope.",
+    whyWrong: {
+      A: "The synthesis agent can only work with what it receives. If the upstream agents covered only visual arts, the synthesis agent has nothing to synthesize about music or film.",
+      C: "The web search agent correctly found articles about what it was asked to find (visual arts). The scope of the search was determined by the coordinator's assignment, not the search agent's queries.",
+      D: "Document analysis filtering wouldn't cause all three agents to independently miss the same sectors. The common cause is the coordinator's upstream decomposition."
+    },
+    studyLinks: [{ text: "Multi-Agent Patterns", anchor: "d1-multi-agent" }, { text: "Task Decomposition", anchor: "d1-decomposition" }],
+    docLinks: []
+  },
+  {
+    id: 8, domain: 5, scenario: "Multi-Agent Research System",
+    official: true,
+    question: "The web search subagent times out while researching a complex topic. You need to design how this failure information flows back to the coordinator agent. Which error propagation approach best enables intelligent recovery?",
+    options: [
+      { id: 'A', text: "Return structured error context to the coordinator including the failure type, the attempted query, any partial results, and potential alternative approaches." },
+      { id: 'B', text: "Implement automatic retry logic with exponential backoff within the subagent, returning a generic 'search unavailable' status only after all retries are exhausted." },
+      { id: 'C', text: "Catch the timeout within the subagent and return an empty result set marked as successful." },
+      { id: 'D', text: "Propagate the timeout exception directly to a top-level handler that terminates the entire research workflow." }
+    ],
+    correct: 'A',
+    explanation: "Structured error context gives the coordinator the information it needs to make intelligent recovery decisions — whether to retry with a modified query, try an alternative approach, or proceed with partial results. Option B's generic status hides valuable context from the coordinator, preventing informed decisions. Option C suppresses the error by marking failure as success, which prevents any recovery and risks incomplete research outputs. Option D terminates the entire workflow unnecessarily when recovery strategies could succeed.",
+    whyWrong: {
+      B: "After retries, returning a generic 'search unavailable' still hides the context (what query was attempted, partial results obtained). The coordinator can't make good recovery decisions without that information.",
+      C: "Marking a failure as success (empty result = successful query) is the 'silent suppression' anti-pattern. The coordinator proceeds assuming complete information when it's not.",
+      D: "Terminating the entire workflow on a single subagent failure wastes all results from other agents and prevents partial-result workflows. Single-agent failures should not be fatal."
+    },
+    studyLinks: [{ text: "Error Propagation", anchor: "d5-errors" }],
+    docLinks: []
+  },
+  {
+    id: 9, domain: 2, scenario: "Multi-Agent Research System",
+    official: true,
+    question: "During testing, the synthesis agent frequently needs to verify specific claims while combining findings. Currently, when verification is needed, the synthesis agent returns control to the coordinator, which invokes the web search agent, then re-invokes synthesis with results. This adds 2-3 round trips per task and increases latency by 40%. Your evaluation shows 85% of verifications are simple fact-checks (dates, names, statistics) while 15% require deeper investigation. What's the most effective approach to reduce overhead while maintaining system reliability?",
+    options: [
+      { id: 'A', text: "Give the synthesis agent a scoped verify_fact tool for simple lookups, while complex verifications continue delegating to the web search agent through the coordinator." },
+      { id: 'B', text: "Have the synthesis agent accumulate all verification needs and return them as a batch to the coordinator at the end of its pass, which then sends them all to the web search agent at once." },
+      { id: 'C', text: "Give the synthesis agent access to all web search tools so it can handle any verification need directly without round-trips through the coordinator." },
+      { id: 'D', text: "Have the web search agent proactively cache extra context around each source during initial research, anticipating what the synthesis agent might need to verify." }
+    ],
+    correct: 'A',
+    explanation: "Option A applies the principle of least privilege by giving the synthesis agent only what it needs for the 85% common case (simple fact verification) while preserving the existing coordination pattern for complex cases. Option B's batching approach creates blocking dependencies since synthesis steps may depend on earlier verified facts. Option C over-provisions the synthesis agent, violating separation of concerns. Option D relies on speculative caching that cannot reliably predict what the synthesis agent will need to verify.",
+    whyWrong: {
+      B: "Batching all verifications creates a blocking dependency — the synthesis agent cannot proceed on later sections if earlier sections depend on verified facts from earlier in the batch.",
+      C: "Giving the synthesis agent all web search tools violates the principle that agents should only have tools for their role. It also creates unclear responsibility boundaries between agents.",
+      D: "Speculative caching is unreliable — the web search agent cannot know what specific claims the synthesis agent will need to verify. It would need to cache potentially everything."
+    },
+    studyLinks: [{ text: "Tool Distribution & Choice", anchor: "d2-distribution" }],
+    docLinks: []
+  },
+  {
+    id: 10, domain: 3, scenario: "Claude Code for CI/CD",
+    official: true,
+    question: "Your pipeline script runs claude \"Analyze this pull request for security issues\" but the job hangs indefinitely. Logs indicate Claude Code is waiting for interactive input. What's the correct approach to run Claude Code in an automated pipeline?",
+    options: [
+      { id: 'A', text: "Add the -p flag: claude -p \"Analyze this pull request for security issues\"" },
+      { id: 'B', text: "Set the environment variable CLAUDE_HEADLESS=true before running the command." },
+      { id: 'C', text: "Redirect stdin from /dev/null: claude \"Analyze this pull request for security issues\" < /dev/null" },
+      { id: 'D', text: "Add the --batch flag: claude --batch \"Analyze this pull request for security issues\"" }
+    ],
+    correct: 'A',
+    explanation: "The -p (or --print) flag is the documented way to run Claude Code in non-interactive mode. It processes the prompt, outputs the result to stdout, and exits without waiting for user input — exactly what CI/CD pipelines require. The other options reference non-existent features (CLAUDE_HEADLESS environment variable, --batch flag) or use Unix workarounds (/dev/null) that don't properly address Claude Code's command syntax.",
+    whyWrong: {
+      B: "CLAUDE_HEADLESS is not a real Claude Code environment variable. This would have no effect.",
+      C: "Redirecting stdin addresses the symptom, not the proper mechanism. The -p flag is the correct and documented approach for non-interactive mode.",
+      D: "--batch is not a real Claude Code flag. This command would fail with an unknown option error."
+    },
+    studyLinks: [{ text: "CI/CD Integration", anchor: "d3-cicd" }],
+    docLinks: [{ text: "CLI Reference", url: "https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/cli-reference" }]
+  },
+  {
+    id: 11, domain: 4, scenario: "Claude Code for CI/CD",
+    official: true,
+    question: "Your team wants to reduce API costs for automated analysis. Currently, real-time Claude calls power two workflows: (1) a blocking pre-merge check that must complete before developers can merge, and (2) a technical debt report generated overnight for review the next morning. Your manager proposes switching both to the Message Batches API for its 50% cost savings. How should you evaluate this proposal?",
+    options: [
+      { id: 'A', text: "Use batch processing for the technical debt reports only; keep real-time calls for pre-merge checks." },
+      { id: 'B', text: "Switch both workflows to batch processing with status polling to check for completion." },
+      { id: 'C', text: "Keep real-time calls for both workflows to avoid batch result ordering issues." },
+      { id: 'D', text: "Switch both to batch processing with a timeout fallback to real-time if batches take too long." }
+    ],
+    correct: 'A',
+    explanation: "The Message Batches API offers 50% cost savings but has processing times up to 24 hours with no guaranteed latency SLA. This makes it unsuitable for blocking pre-merge checks where developers wait for results, but ideal for overnight batch jobs like technical debt reports. Option B is wrong because relying on 'often faster' completion isn't acceptable for blocking workflows. Option C reflects a misconception — batch results can be correlated using custom_id fields. Option D adds unnecessary complexity when the simpler solution is matching each API to its appropriate use case.",
+    whyWrong: {
+      B: "Pre-merge checks are blocking — developers cannot merge until they complete. The batch API has no guaranteed completion time (up to 24 hours), making this unacceptable for blocking workflows.",
+      C: "Batch result ordering isn't a real problem — custom_id fields allow you to correlate each response to its original request, regardless of response order.",
+      D: "Adding timeout-fallback complexity is unnecessary when the correct solution is simply using each API for its appropriate use case from the start."
+    },
+    studyLinks: [{ text: "Batch Processing", anchor: "d4-batch" }],
+    docLinks: [{ text: "Message Batches API", url: "https://docs.anthropic.com/en/docs/build-with-claude/message-batches" }]
+  },
+  {
+    id: 12, domain: 4, scenario: "Claude Code for CI/CD",
+    official: true,
+    question: "A pull request modifies 14 files across the stock tracking module. Your single-pass review analyzing all files together produces inconsistent results: detailed feedback for some files but superficial comments for others, obvious bugs missed, and contradictory feedback — flagging a pattern as problematic in one file while approving identical code elsewhere in the same PR. How should you restructure the review?",
+    options: [
+      { id: 'A', text: "Split into focused passes: analyze each file individually for local issues, then run a separate integration-focused pass examining cross-file data flow." },
+      { id: 'B', text: "Require developers to split large PRs into smaller submissions of 3-4 files before the automated review runs." },
+      { id: 'C', text: "Switch to a higher-tier model with a larger context window to give all 14 files adequate attention in one pass." },
+      { id: 'D', text: "Run three independent review passes on the full PR and only flag issues that appear in at least two of the three runs." }
+    ],
+    correct: 'A',
+    explanation: "Splitting reviews into focused passes directly addresses the root cause: attention dilution when processing many files at once. File-by-file analysis ensures consistent depth, while a separate integration pass catches cross-file issues. Option B shifts burden to developers without improving the system. Option C misunderstands that larger context windows don't solve attention quality issues. Option D would actually suppress detection of real bugs by requiring consensus on issues that may only be caught intermittently.",
+    whyWrong: {
+      B: "Splitting PRs shifts the burden to developers and doesn't fix the underlying architecture issue. It also breaks developer workflow unnecessarily.",
+      C: "Attention dilution is not a context window size problem — it's an attention quality problem. A larger window still gives proportionally less attention to middle files.",
+      D: "Requiring consensus among independent passes would suppress valid single-catch issues. Bugs that only appear intermittently are real bugs, not noise."
+    },
+    studyLinks: [{ text: "Multi-Instance Review", anchor: "d4-review" }],
+    docLinks: []
+  },
+
+  // ═══ ADDITIONAL DOMAIN 1 ═══
+  {
+    id: 13, domain: 1,
+    question: "An agentic loop should continue iterating when which condition is true?",
+    options: [
+      { id: 'A', text: "stop_reason is \"tool_use\"" },
+      { id: 'B', text: "stop_reason is \"end_turn\"" },
+      { id: 'C', text: "The assistant message contains text indicating work is not yet done" },
+      { id: 'D', text: "A fixed iteration counter has not yet reached its maximum" }
+    ],
+    correct: 'A',
+    explanation: "The agentic loop continues when stop_reason is \"tool_use\" — meaning Claude has requested tool execution and is waiting for results. The loop terminates on \"end_turn\" — meaning Claude has completed its work and has a final response. Checking text content is an anti-pattern (Claude may say 'Done' mid-task). Fixed iteration caps are safety guards, not primary termination mechanisms.",
+    whyWrong: {
+      B: "\"end_turn\" is the TERMINATION signal, not the continuation signal. The loop stops when stop_reason is \"end_turn\".",
+      C: "Parsing natural language signals (like 'I'm still working') for loop control is an explicit anti-pattern. The stop_reason field is the correct mechanism.",
+      D: "Fixed iteration caps are backup safety guards against infinite loops — not the primary stopping mechanism. The primary mechanism is always stop_reason."
+    },
+    studyLinks: [{ text: "Agentic Loop Design", anchor: "d1-agentic-loop" }],
+    docLinks: []
+  },
+  {
+    id: 14, domain: 1,
+    question: "How does a coordinator agent spawn parallel subagents in the Claude Agent SDK?",
+    options: [
+      { id: 'A', text: "Emit multiple Task tool calls in a single coordinator response." },
+      { id: 'B', text: "Emit Task tool calls in separate sequential turns, one per turn." },
+      { id: 'C', text: "Use fork_session for each subagent, creating independent branches." },
+      { id: 'D', text: "Set allowedTools to include multiple agent type identifiers." }
+    ],
+    correct: 'A',
+    explanation: "Parallel subagent execution requires emitting multiple Task tool calls in a SINGLE coordinator response turn. The SDK then executes them simultaneously. Emitting calls across separate turns results in sequential execution (each waits for the previous). fork_session is for exploring divergent approaches from a shared baseline, not multi-agent coordination. allowedTools controls which tools an agent can use, not parallelism.",
+    whyWrong: {
+      B: "Separate turns = sequential execution. The SDK executes Task calls in parallel only when they appear in the same response turn.",
+      C: "fork_session creates independent branches from a shared analysis baseline — used for comparing approaches, not for parallel research coordination.",
+      D: "allowedTools restricts which tools an agent can access. It has no bearing on spawning subagents in parallel. 'Task' must be in allowedTools for spawning to work at all."
+    },
+    studyLinks: [{ text: "Context & Spawning", anchor: "d1-context-passing" }],
+    docLinks: []
+  },
+  {
+    id: 15, domain: 1,
+    question: "A subagent in a multi-agent system needs the web search results produced by a prior agent. How should these results be provided to the subagent?",
+    options: [
+      { id: 'A', text: "Include the results directly in the subagent's Task prompt." },
+      { id: 'B', text: "Store results in a shared global variable accessible to all subagents." },
+      { id: 'C', text: "The coordinator automatically forwards its conversation history to all spawned subagents." },
+      { id: 'D', text: "Use --resume to give the subagent access to the prior agent's session." }
+    ],
+    correct: 'A',
+    explanation: "Subagents have isolated context — they do NOT automatically inherit the coordinator's conversation history or any shared state. Results must be explicitly included in the Task prompt. Subagents can't access global variables or other agents' sessions. --resume is for resuming named human-facing sessions, not for cross-agent context sharing.",
+    whyWrong: {
+      B: "The Claude Agent SDK has no shared global variable mechanism between subagents. All context must be passed explicitly.",
+      C: "This is a common misconception — subagents do NOT automatically inherit parent context. Context isolation is a fundamental characteristic of the multi-agent pattern.",
+      D: "--resume is for continuing a named prior conversation session, not for sharing context between agents in a multi-agent pipeline."
+    },
+    studyLinks: [{ text: "Context & Spawning", anchor: "d1-context-passing" }],
+    docLinks: []
+  },
+  {
+    id: 16, domain: 1,
+    question: "Which is an anti-pattern for agentic loop termination?",
+    options: [
+      { id: 'A', text: "Terminating the loop when stop_reason equals \"end_turn\"." },
+      { id: 'B', text: "Continuing the loop when stop_reason equals \"tool_use\"." },
+      { id: 'C', text: "Checking if the assistant's response text contains 'Task complete' to determine when to stop." },
+      { id: 'D', text: "Appending tool results to conversation history before sending the next request." }
+    ],
+    correct: 'C',
+    explanation: "Parsing natural language signals ('Task complete', 'Done', 'Finished') to determine loop termination is an explicit anti-pattern. Claude may produce these phrases in the middle of a multi-step task. The stop_reason field is the correct, reliable termination signal. Options A, B, and D are all correct loop behaviors.",
+    whyWrong: {
+      A: "This is correct behavior — end_turn is the correct termination signal.",
+      B: "This is correct behavior — tool_use means tools need executing, so continue the loop.",
+      D: "This is correct behavior — tool results must be appended to conversation history for the model to reason about them in the next iteration."
+    },
+    studyLinks: [{ text: "Agentic Loop Design", anchor: "d1-agentic-loop" }],
+    docLinks: []
+  },
+  {
+    id: 17, domain: 1,
+    question: "Which scenario is the best use case for fork_session?",
+    options: [
+      { id: 'A', text: "Exploring two different refactoring approaches from the same shared codebase analysis baseline." },
+      { id: 'B', text: "Resuming an investigation after new commits were pushed to the repository." },
+      { id: 'C', text: "Spawning web search and document analysis subagents simultaneously." },
+      { id: 'D', text: "Continuing the same investigation across multiple work sessions over several days." }
+    ],
+    correct: 'A',
+    explanation: "fork_session creates independent branches from a shared analysis baseline — perfect for comparing two divergent approaches without contaminating each other. Changes in one fork don't affect the other. Resuming after code changes = --resume. Parallel subagents = Task tool calls in single response. Multi-session continuation = --resume with session names.",
+    whyWrong: {
+      B: "After new commits, use --resume and explicitly inform the session about which files changed. fork_session is for divergent exploration, not continuation after external changes.",
+      C: "Parallel subagent spawning uses multiple Task tool calls in a single coordinator response — that's a different mechanism entirely from fork_session.",
+      D: "Multi-day continuation uses --resume with named sessions to continue where you left off — not fork_session, which is for parallel divergent exploration."
+    },
+    studyLinks: [{ text: "Session Management", anchor: "d1-sessions" }],
+    docLinks: []
+  },
+  {
+    id: 18, domain: 1,
+    question: "A coordinator's allowedTools list does not include 'Task'. What happens when it tries to spawn subagents?",
+    options: [
+      { id: 'A', text: "Subagent spawning fails — 'Task' must be in allowedTools for the coordinator to invoke subagents." },
+      { id: 'B', text: "The coordinator spawns subagents using the built-in Run tool as a fallback." },
+      { id: 'C', text: "Subagent spawning works normally — allowedTools only restricts which tools subagents can use." },
+      { id: 'D', text: "The coordinator automatically falls back to sequential single-agent execution." }
+    ],
+    correct: 'A',
+    explanation: "The Task tool must be explicitly listed in the coordinator's allowedTools configuration. Without this, the coordinator cannot spawn subagents — it simply doesn't have access to the tool needed for spawning. There is no automatic fallback mechanism; the system just can't spawn subagents.",
+    whyWrong: {
+      B: "There is no 'Run' tool that serves as a fallback for Task. The coordinator will simply lack the ability to spawn subagents.",
+      C: "This is incorrect — allowedTools restricts all tool access including the Task spawning tool. The coordinator itself is constrained by its own allowedTools list.",
+      D: "There is no automatic fallback. If Task is not in allowedTools, the coordinator attempts to operate without subagent capabilities, likely producing degraded results or errors."
+    },
+    studyLinks: [{ text: "Context & Spawning", anchor: "d1-context-passing" }],
+    docLinks: []
+  },
+  {
+    id: 19, domain: 1,
+    question: "A PostToolUse hook is best suited for which use case?",
+    options: [
+      { id: 'A', text: "Normalizing heterogeneous data formats (timestamps, status codes) from different MCP tools before the model processes them." },
+      { id: 'B', text: "Blocking tool calls that violate business rules before they execute." },
+      { id: 'C', text: "Preventing the agentic loop from running more than a maximum number of iterations." },
+      { id: 'D', text: "Modifying which tool the model chose to call." }
+    ],
+    correct: 'A',
+    explanation: "PostToolUse hooks intercept tool RESULTS after execution, before the model processes them — ideal for normalizing heterogeneous data formats. Blocking outgoing tool calls (pre-execution enforcement) uses tool call interception hooks (pre-execution, not post). Iteration caps are separate safety mechanisms. Modifying tool selection is not a hook capability.",
+    whyWrong: {
+      B: "Blocking outgoing tool calls requires a PRE-execution interception hook, not PostToolUse. PostToolUse runs after the tool has already executed.",
+      C: "Iteration caps are typically implemented as a counter in the agentic loop control logic, not via hooks.",
+      D: "Hooks intercept and transform data flowing through the pipeline; they don't redirect or replace the tool selection the model made."
+    },
+    studyLinks: [{ text: "Agent SDK Hooks", anchor: "d1-hooks" }],
+    docLinks: []
+  },
+  {
+    id: 20, domain: 1,
+    question: "When is starting a NEW session with a structured summary preferable to using --resume?",
+    options: [
+      { id: 'A', text: "When prior tool results in the session are stale (e.g., code has been significantly modified since the session)." },
+      { id: 'B', text: "When you want to continue exactly where you left off with all prior context intact." },
+      { id: 'C', text: "When the session was interrupted mid-tool-execution." },
+      { id: 'D', text: "When the session name was not saved before the previous session ended." }
+    ],
+    correct: 'A',
+    explanation: "Start fresh when prior tool results are stale — the model would be reasoning from observations about code that no longer exists or has changed. Inject a structured summary of still-valid findings into the new session. Use --resume when prior context is mostly still valid. Mid-execution interruptions and unnamed sessions still benefit from --resume if the context is fresh.",
+    whyWrong: {
+      B: "If context is intact and still valid, --resume is the right choice to avoid re-doing prior work.",
+      C: "Even if interrupted mid-execution, if the context and findings are still valid, --resume is appropriate. Stale data is the key criterion, not interruption.",
+      D: "If context is fresh and valuable, it's worth recreating the session by name and resuming. Context freshness matters more than whether the name was saved."
+    },
+    studyLinks: [{ text: "Session Management", anchor: "d1-sessions" }],
+    docLinks: []
+  },
+  {
+    id: 21, domain: 1,
+    question: "For a multi-concern customer support request ('I want to return two items and dispute a charge'), what is the correct handling approach?",
+    options: [
+      { id: 'A', text: "Decompose into distinct items, investigate each in parallel using shared context, then synthesize a unified resolution." },
+      { id: 'B', text: "Handle concerns sequentially, fully resolving each before starting the next." },
+      { id: 'C', text: "Escalate multi-concern requests to human agents since they exceed single-issue scope." },
+      { id: 'D', text: "Ask the customer to contact support separately for each issue." }
+    ],
+    correct: 'A',
+    explanation: "Multi-concern requests should be decomposed into distinct items, investigated in parallel (leveraging shared customer context), then synthesized into a single unified response. Sequential handling is slower. Escalating multi-concern requests is incorrect — complexity does not automatically require human intervention. Asking customers to contact separately creates a poor experience.",
+    whyWrong: {
+      B: "Sequential handling is slower than parallel investigation and doesn't leverage the shared context advantage. Parallel investigation is more efficient.",
+      C: "Multiple concerns don't inherently require escalation. Agents should be capable of handling multi-issue requests.",
+      D: "Requiring separate contacts for each issue creates a poor customer experience and contradicts the goal of high first-contact resolution rates."
+    },
+    studyLinks: [{ text: "Enforcement & Handoffs", anchor: "d1-enforcement" }],
+    docLinks: []
+  },
+  {
+    id: 22, domain: 1,
+    question: "Which task decomposition pattern is appropriate for a large code review with a predictable set of aspects to check (security, performance, style, test coverage)?",
+    options: [
+      { id: 'A', text: "Prompt chaining — sequential passes each focused on one review aspect." },
+      { id: 'B', text: "Dynamic adaptive decomposition — generate review tasks based on what each pass discovers." },
+      { id: 'C', text: "Single-pass holistic review with all aspects considered simultaneously." },
+      { id: 'D', text: "Fork-based parallel reviews, one per aspect, merged at the end." }
+    ],
+    correct: 'A',
+    explanation: "Prompt chaining (fixed sequential pipeline) is designed for predictable multi-aspect reviews where the steps are known in advance. Each pass focuses on one dimension, preventing attention dilution. Dynamic decomposition is for open-ended investigations where next steps depend on findings. Single-pass reviews of many files/aspects cause attention dilution. Fork-based reviews are for divergent approaches exploration, not structured multi-aspect reviews.",
+    whyWrong: {
+      B: "Dynamic decomposition is for open-ended investigation where you don't know the next step until you see the current findings. A code review with defined aspects is not open-ended.",
+      C: "Single-pass holistic review of many files and aspects causes attention dilution — the quality issue the question context describes.",
+      D: "Fork-session is for exploring divergent implementation approaches from a shared baseline, not for structured multi-aspect reviews of the same codebase."
+    },
+    studyLinks: [{ text: "Task Decomposition", anchor: "d1-decomposition" }],
+    docLinks: []
+  },
+
+  // ═══ ADDITIONAL DOMAIN 2 ═══
+  {
+    id: 23, domain: 2,
+    question: "Your MCP tool returns {\"error\": \"Operation failed\"} when it encounters a problem. Why is this response structure problematic?",
+    options: [
+      { id: 'A', text: "It prevents the agent from making appropriate recovery decisions because the failure type is unknown." },
+      { id: 'B', text: "The error message is too long and will consume excess context window space." },
+      { id: 'C', text: "MCP tools are required to use HTTP status codes instead of error message strings." },
+      { id: 'D', text: "The isError flag is required by the MCP specification but is missing from this response." }
+    ],
+    correct: 'A',
+    explanation: "A generic error message hides the information the agent needs to recover intelligently. A transient timeout requires retry logic; a permission error requires escalation; a business rule violation requires a customer-facing explanation. Without error category, isRetryable flag, and context, the agent cannot determine the appropriate response — it may retry a non-retryable error or fail to retry a transient one.",
+    whyWrong: {
+      B: "Short error messages don't consume significant context. The problem is informational, not length-based.",
+      C: "MCP tools communicate errors through the isError flag and structured response bodies, not HTTP status codes. They're not HTTP-based in this sense.",
+      D: "While the isError flag is important, the deeper problem is the lack of structured metadata (errorCategory, isRetryable) that enables intelligent recovery — not just the flag's presence."
+    },
+    studyLinks: [{ text: "Structured Error Responses", anchor: "d2-errors" }],
+    docLinks: []
+  },
+  {
+    id: 24, domain: 2,
+    question: "A search tool returns {\"results\": []}. What must be true for this response to be interpretable?",
+    options: [
+      { id: 'A', text: "The response must explicitly distinguish between a successful query with no matches vs. a failed query — they require different coordinator responses." },
+      { id: 'B', text: "An empty results array always indicates a successful query that found no matching records." },
+      { id: 'C', text: "An empty results array always indicates a query failure that should trigger retry logic." },
+      { id: 'D', text: "The coordinator should always retry on empty results to ensure the search wasn't accidentally empty." }
+    ],
+    correct: 'A',
+    explanation: "An empty result set is inherently ambiguous — it could be a valid query with no matches (don't retry, proceed with partial results) or a failed query being silently suppressed (retry or report error). These require completely opposite responses. The tool must explicitly signal which case occurred: e.g., {\"queryExecuted\": true, \"matchCount\": 0} for valid empty vs. {\"isError\": true, \"errorCategory\": \"transient\"} for failures.",
+    whyWrong: {
+      B: "This assumption is incorrect — empty results could indicate a failed query that was silently suppressed. Assuming success on empty results is the 'silent suppression' anti-pattern.",
+      C: "This is also incorrect — empty results from a successfully executed query are valid and should not trigger retry logic (no results exist to find).",
+      D: "Always retrying on empty results conflates access failures with valid empty responses, causing unnecessary retries and potential data corruption."
+    },
+    studyLinks: [{ text: "Structured Error Responses", anchor: "d2-errors" }],
+    docLinks: []
+  },
+  {
+    id: 25, domain: 2,
+    question: "When should you use tool_choice: \"any\" vs tool_choice: {\"type\": \"tool\", \"name\": \"extract_metadata\"}?",
+    options: [
+      { id: 'A', text: "Use \"any\" to guarantee the model calls a tool (any tool it chooses); use forced selection to guarantee a specific named tool is called first." },
+      { id: 'B', text: "Use \"any\" for optional tool use; use forced selection when tool use is required." },
+      { id: 'C', text: "Use \"any\" when you have one tool; use forced selection when you have multiple tools." },
+      { id: 'D', text: "These are interchangeable — both guarantee a tool call without specifying which one." }
+    ],
+    correct: 'A',
+    explanation: "\"any\" guarantees the model calls SOME tool from the tools list, but it chooses which. This is useful when you need structured output but multiple extraction schemas apply. Forced selection ({type: \"tool\", name: \"...\"}) guarantees a SPECIFIC named tool is called first — essential for ordered pipelines (e.g., extract_metadata must run before enrichment tools).",
+    whyWrong: {
+      B: "\"auto\" is the optional tool use setting. \"any\" and forced selection both guarantee a tool call.",
+      C: "The number of tools in the list is not the determining factor. Forced selection specifies which tool regardless of how many are available.",
+      D: "These are NOT interchangeable. \"any\" allows model choice; forced selection mandates a specific tool. The distinction matters for ordered pipelines."
+    },
+    studyLinks: [{ text: "Tool Distribution & Choice", anchor: "d2-distribution" }],
+    docLinks: []
+  },
+  {
+    id: 26, domain: 2,
+    question: "A shared MCP server used by your entire team should be configured in which file?",
+    options: [
+      { id: 'A', text: ".mcp.json at the project root (version-controlled)." },
+      { id: 'B', text: "~/.claude.json in each developer's home directory." },
+      { id: 'C', text: ".claude/settings.json in the project directory." },
+      { id: 'D', text: "~/.claude/CLAUDE.md with MCP server configuration blocks." }
+    ],
+    correct: 'A',
+    explanation: ".mcp.json is project-scoped and version-controlled — it's committed to the repository and automatically available to all team members when they clone or pull. ~/.claude.json is user-scoped and personal — not shared. The other options don't exist as MCP configuration mechanisms in Claude Code.",
+    whyWrong: {
+      B: "~/.claude.json is user-scoped — personal and NOT shared via version control. Every team member would need to configure it manually.",
+      C: ".claude/settings.json is not the correct file for MCP server configuration. The MCP configuration file is .mcp.json.",
+      D: "~/.claude/CLAUDE.md is for Claude Code context and instructions, not MCP server configuration."
+    },
+    studyLinks: [{ text: "MCP Integration", anchor: "d2-mcp" }],
+    docLinks: [{ text: "MCP Documentation", url: "https://modelcontextprotocol.io/" }]
+  },
+  {
+    id: 27, domain: 2,
+    question: "A synthesis agent has 18 tools including web search, database query, API calls, and file analysis. Tool selection is unreliable. What is the primary fix?",
+    options: [
+      { id: 'A', text: "Restrict the synthesis agent to 4-5 tools actually needed for synthesis (e.g., verify_fact, write_report, cite_source)." },
+      { id: 'B', text: "Add detailed descriptions to all 18 tools to help the model choose correctly." },
+      { id: 'C', text: "Use tool_choice: \"auto\" to let the model decide when to use tools." },
+      { id: 'D', text: "Split into two agents, each with 9 tools." }
+    ],
+    correct: 'A',
+    explanation: "Too many tools increases decision complexity and degrades tool selection reliability. The synthesis agent shouldn't have web search or database tools — those belong to specialized agents. Restricting to only tools needed for its role (synthesis-specific tools) is the primary fix. Better descriptions help but don't solve the fundamental problem of having 18 tools when 4-5 are appropriate. Splitting 18 into 2×9 still leaves each agent with too many.",
+    whyWrong: {
+      B: "Better descriptions help reduce ambiguity between similar tools, but 18 tools is inherently too many for reliable selection. The scope problem must be addressed first.",
+      C: "tool_choice: \"auto\" affects whether a tool is called at all, not which one. It doesn't solve the selection reliability problem among 18 tools.",
+      D: "Two agents with 9 tools each still violates the principle that agents should have only the tools they need. 9 is still too many for a specialized role."
+    },
+    studyLinks: [{ text: "Tool Distribution & Choice", anchor: "d2-distribution" }],
+    docLinks: []
+  },
+  {
+    id: 28, domain: 2,
+    question: "What is the primary difference between MCP resources and MCP tools?",
+    options: [
+      { id: 'A', text: "Resources expose content catalogs for agent visibility; tools execute actions and return results." },
+      { id: 'B', text: "Resources are for read-only operations; tools are for write operations." },
+      { id: 'C', text: "Resources are project-scoped in .mcp.json; tools are user-scoped in ~/.claude.json." },
+      { id: 'D', text: "Resources are consumed by the model passively; tools require explicit invocation by the coordinator." }
+    ],
+    correct: 'A',
+    explanation: "Resources expose content catalogs (issue summaries, documentation hierarchies, database schemas) giving agents visibility into available data without requiring exploratory tool calls — like a manifest or catalog. Tools are action-execution mechanisms invoked when the agent needs to do something. The read/write distinction (option B) doesn't capture the key difference: resources are about discovery/visibility while tools are about action.",
+    whyWrong: {
+      B: "Resources can expose mutable data and tools can be read-only. The read/write distinction is not the defining characteristic.",
+      C: "Scoping (.mcp.json vs ~/.claude.json) determines who has access to a server, not whether it provides resources vs tools. A server can provide both.",
+      D: "Both tools and resources are explicitly requested by the agent — neither is 'passive'. The difference is in what they provide: catalog data vs action execution."
+    },
+    studyLinks: [{ text: "MCP Integration", anchor: "d2-mcp" }],
+    docLinks: []
+  },
+  {
+    id: 29, domain: 2,
+    question: "When should you use Grep vs Glob?",
+    options: [
+      { id: 'A', text: "Grep to search file CONTENTS for patterns; Glob to find files by PATH PATTERNS." },
+      { id: 'B', text: "Grep for binary files; Glob for text files." },
+      { id: 'C', text: "Grep for searching within a single file; Glob for searching across multiple files." },
+      { id: 'D', text: "Grep for exact string matching; Glob for fuzzy/pattern matching." }
+    ],
+    correct: 'A',
+    explanation: "Grep searches the CONTENT inside files (e.g., finding all callers of a function, locating error message strings, finding import statements). Glob finds files by their NAME or PATH PATTERN (e.g., all test files matching **/*.test.tsx, all Python files in a directory). These are complementary tools for different dimensions of search.",
+    whyWrong: {
+      B: "Both tools work with text files. Grep specifically parses text content; binary file handling is a different concern.",
+      C: "Grep can search across multiple files (and does so by default across a directory). The distinction isn't single vs multiple files.",
+      D: "Both tools support pattern matching. The distinction is WHAT they match against: file contents (Grep) vs file paths/names (Glob)."
+    },
+    studyLinks: [{ text: "Built-in Tools", anchor: "d2-builtin" }],
+    docLinks: []
+  },
+  {
+    id: 30, domain: 2,
+    question: "An Edit tool call fails because the target text appears multiple times in the file. What is the correct fallback?",
+    options: [
+      { id: 'A', text: "Read the full file contents, make the change in memory, then Write the entire modified file." },
+      { id: 'B', text: "Use Bash with sed to perform targeted line-number-based replacement." },
+      { id: 'C', text: "Use Grep to find the line number, then attempt Edit again specifying the line number." },
+      { id: 'D', text: "Split the file into sections and attempt Edit on each section independently." }
+    ],
+    correct: 'A',
+    explanation: "When Edit fails due to non-unique anchor text, the documented fallback is Read + Write: read the full file contents, make the change, then write the entire file back. This is reliable and doesn't rely on line numbers (which can shift). Bash/sed introduces shell dependency and potential escaping issues. Edit doesn't support line number specification. Splitting files is not a standard approach and risks creating malformed files.",
+    whyWrong: {
+      B: "Using Bash/sed introduces shell dependency, complex escaping requirements, and bypasses Claude Code's preferred tool-based approach. Read+Write is cleaner.",
+      C: "Edit does not support line number-based targeting. Its matching mechanism is anchor text uniqueness.",
+      D: "Splitting files to attempt Edit on subsections is not a standard approach and risks file corruption or malformed results."
+    },
+    studyLinks: [{ text: "Built-in Tools", anchor: "d2-builtin" }],
+    docLinks: []
+  },
+
+  // ═══ ADDITIONAL DOMAIN 3 ═══
+  {
+    id: 31, domain: 3,
+    question: "A new team member is not receiving the project's coding standards. They have Claude Code installed. The standards are currently in ~/.claude/CLAUDE.md on the original author's machine. What is the fix?",
+    options: [
+      { id: 'A', text: "Move the standards to .claude/CLAUDE.md or the root CLAUDE.md in the project repository." },
+      { id: 'B', text: "Have the new team member copy the standards to their own ~/.claude/CLAUDE.md." },
+      { id: 'C', text: "Use @import in the project CLAUDE.md to reference the author's user-level file." },
+      { id: 'D', text: "Add the standards to the project's README.md so they're visible in the repository." }
+    ],
+    correct: 'A',
+    explanation: "User-level CLAUDE.md (~/.claude/CLAUDE.md) is personal — it is NOT shared via version control and won't be present when someone else clones the repository. The standards must live in the project-level CLAUDE.md (tracked in git) for all team members to receive them automatically.",
+    whyWrong: {
+      B: "Manually copying creates a maintenance nightmare — every update to standards requires manual synchronization across all team members' machines.",
+      C: "@import references files relative to the importing file's location. Cross-user file references don't work and user-level files aren't in version control.",
+      D: "README.md is documentation for humans, not loaded as context by Claude Code. Standards in README won't be automatically applied."
+    },
+    studyLinks: [{ text: "CLAUDE.md Hierarchy", anchor: "d3-claudemd" }],
+    docLinks: []
+  },
+  {
+    id: 32, domain: 3,
+    question: "When should you use context: fork in a skill's SKILL.md frontmatter?",
+    options: [
+      { id: 'A', text: "When the skill produces verbose output that would pollute the main conversation context." },
+      { id: 'B', text: "When the skill needs access to more tools than the current session allows." },
+      { id: 'C', text: "When the skill is invoked from a CI/CD pipeline rather than interactively." },
+      { id: 'D', text: "When multiple developers on a team share the same skill." }
+    ],
+    correct: 'A',
+    explanation: "context: fork runs the skill in an isolated sub-agent context — the verbose discovery output, file reads, and intermediate reasoning don't accumulate in the main conversation. Only the final summary/result is returned to the main session. Use for skills that produce a lot of output: codebase analysis, brainstorming, exploratory research.",
+    whyWrong: {
+      B: "Tool access is controlled by the allowed-tools frontmatter option, not context: fork.",
+      C: "CI/CD integration is controlled by the -p flag and --output-format options, not by skill frontmatter.",
+      D: "Skill sharing scope is determined by whether the skill is in .claude/skills/ (project) or ~/.claude/skills/ (user) — not by context: fork."
+    },
+    studyLinks: [{ text: "Commands & Skills", anchor: "d3-commands" }],
+    docLinks: []
+  },
+  {
+    id: 33, domain: 3,
+    question: "Why are .claude/rules/ glob pattern files preferred over subdirectory CLAUDE.md files for test conventions when tests are spread throughout the codebase?",
+    options: [
+      { id: 'A', text: "Glob patterns can match files regardless of their directory location, while CLAUDE.md files only apply within their specific directory." },
+      { id: 'B', text: "Rules files load faster because they're smaller than CLAUDE.md files." },
+      { id: 'C', text: "Rules files support @import syntax while directory CLAUDE.md files do not." },
+      { id: 'D', text: "Rules files are user-scoped while CLAUDE.md files are team-scoped." }
+    ],
+    correct: 'A',
+    explanation: "A test file convention rule with paths: [\"**/*.test.tsx\"] applies to ALL test files throughout the codebase, regardless of which directory they're in. A subdirectory CLAUDE.md only applies within its directory — so tests co-located with components (src/components/Button.test.tsx) would be in a different directory than tests in src/utils/ and couldn't share a single CLAUDE.md.",
+    whyWrong: {
+      B: "File size and loading speed are not the distinguishing factors. The key advantage is path-based conditional loading.",
+      C: "@import is a feature of CLAUDE.md files at any level, not exclusive to rules files.",
+      D: "Both rules files and CLAUDE.md files at the project level are team-scoped and version-controlled. The scoping distinction is project vs user, not rules vs CLAUDE.md."
+    },
+    studyLinks: [{ text: "Path-Specific Rules", anchor: "d3-rules" }],
+    docLinks: []
+  },
+  {
+    id: 34, domain: 3,
+    question: "Adding a missing null check to a single function with a clear stack trace. Which mode should you use?",
+    options: [
+      { id: 'A', text: "Direct execution — the change is well-scoped, single-file, and the problem is clearly identified." },
+      { id: 'B', text: "Plan mode — any code change could have unintended consequences that require upfront analysis." },
+      { id: 'C', text: "Plan mode — always use plan mode for production code changes regardless of scope." },
+      { id: 'D', text: "Either mode works equally well for this type of change." }
+    ],
+    correct: 'A',
+    explanation: "Direct execution is appropriate for simple, well-scoped changes: single file, clear problem, obvious solution (a null check from a stack trace). Plan mode overhead is not justified here. Plan mode is for complex tasks with multiple valid approaches, large-scale multi-file changes, or architectural decisions — none of which apply to a single null check.",
+    whyWrong: {
+      B: "The risk of unintended consequences doesn't automatically justify plan mode. A single null check in a well-understood function is low-risk and clearly scoped.",
+      C: "Using plan mode for every production code change regardless of scope adds unnecessary overhead and slows down simple, well-understood fixes.",
+      D: "While it technically works, direct execution is clearly more appropriate here. Understanding WHEN to use each mode is the point of the exam question."
+    },
+    studyLinks: [{ text: "Plan Mode vs Direct Execution", anchor: "d3-planmode" }],
+    docLinks: []
+  },
+  {
+    id: 35, domain: 3,
+    question: "What does the argument-hint frontmatter option do in a SKILL.md file?",
+    options: [
+      { id: 'A', text: "Prompts the developer to provide required parameters when invoking the skill without arguments." },
+      { id: 'B', text: "Adds automatic argument validation before the skill executes." },
+      { id: 'C', text: "Restricts which argument types can be passed to the skill at runtime." },
+      { id: 'D', text: "Generates inline documentation for the skill's parameters in the /help output." }
+    ],
+    correct: 'A',
+    explanation: "argument-hint is specifically for improving the developer experience when a skill requires arguments: if someone invokes the skill without providing required arguments, the hint prompts them for what they need. It's a UX enhancement, not a validation or restriction mechanism.",
+    whyWrong: {
+      B: "Argument validation is not performed by argument-hint. It's a prompt/hint, not a validator.",
+      C: "allowed-tools restricts tool access; argument-hint has nothing to do with restricting argument types.",
+      D: "argument-hint doesn't generate help documentation — it's an interactive prompt shown when arguments are missing at invocation time."
+    },
+    studyLinks: [{ text: "Commands & Skills", anchor: "d3-commands" }],
+    docLinks: []
+  },
+  {
+    id: 36, domain: 3,
+    question: "When running Claude Code in CI, why use an independent Claude instance to review generated code rather than the same session that generated it?",
+    options: [
+      { id: 'A', text: "The generating session retains its reasoning context, making it less likely to question decisions it already made." },
+      { id: 'B', text: "The generating session has consumed too many tokens and lacks capacity for quality review." },
+      { id: 'C', text: "Independent instances have access to additional tools not available to generating sessions." },
+      { id: 'D', text: "CI pipelines don't support multi-turn sessions, requiring a fresh instance for review." }
+    ],
+    correct: 'A',
+    explanation: "Self-review bias: when a model generates code, it retains the reasoning context from that generation. It already 'knows' why it made each decision and is less likely to question its own choices. An independent instance with no prior reasoning context reviews more objectively and catches more subtle issues.",
+    whyWrong: {
+      B: "Token capacity is not the issue — the context window doesn't 'fill up' in a way that prevents review. The problem is reasoning context retention, not token exhaustion.",
+      C: "Tool access is configured at the session level and doesn't differ between generating and review instances by default.",
+      D: "CI pipelines do support multi-turn sessions. Session isolation for review is a quality choice, not a technical limitation."
+    },
+    studyLinks: [{ text: "CI/CD Integration", anchor: "d3-cicd" }],
+    docLinks: []
+  },
+
+  // ═══ ADDITIONAL DOMAIN 4 ═══
+  {
+    id: 37, domain: 4,
+    question: "A code review tool generates too many false positives about minor style issues. Which instruction best reduces false positives?",
+    options: [
+      { id: 'A', text: "\"Flag only issues where code behavior contradicts documented requirements or would cause runtime errors; skip stylistic preferences and minor formatting.\"" },
+      { id: 'B', text: "\"Be conservative and only report high-confidence findings.\"" },
+      { id: 'C', text: "\"Focus on important issues and use your best judgment about which findings are worth reporting.\"" },
+      { id: 'D', text: "\"Only report findings you are extremely confident about.\"" }
+    ],
+    correct: 'A',
+    explanation: "Explicit categorical criteria (what TO report vs what to SKIP) are far more effective than vague confidence-based instructions. \"Be conservative\" doesn't define what conservative means. \"Best judgment\" and \"extremely confident\" leave the threshold undefined — the model's calibration of 'high confidence' may still include style issues.",
+    whyWrong: {
+      B: "\"Be conservative\" and \"high-confidence\" are undefined thresholds. The model's calibration of confidence doesn't map to the specific categories you want to filter.",
+      C: "\"Best judgment\" and \"important issues\" are completely undefined criteria. The model can only apply judgment based on patterns it's learned, not on your specific product's quality criteria.",
+      D: "Confidence thresholds don't correlate with the genuine vs. style issue distinction you're trying to make. A model can be confidently wrong about a style issue being significant."
+    },
+    studyLinks: [{ text: "Explicit Criteria", anchor: "d4-criteria" }],
+    docLinks: []
+  },
+  {
+    id: 38, domain: 4,
+    question: "Detailed instructions alone produce inconsistent tool selection for ambiguous queries. What is the most effective fix?",
+    options: [
+      { id: 'A', text: "Add 2-4 few-shot examples demonstrating correct tool selection for the ambiguous cases, including reasoning for why one tool was chosen over alternatives." },
+      { id: 'B', text: "Rewrite instructions to be longer and more detailed with explicit decision trees." },
+      { id: 'C', text: "Use tool_choice: \"any\" to ensure the model always calls a tool." },
+      { id: 'D', text: "Consolidate the ambiguous tools into one combined tool." }
+    ],
+    correct: 'A',
+    explanation: "Few-shot examples are the most effective technique when detailed instructions alone produce inconsistent results. They demonstrate the desired judgment for ambiguous cases, including the reasoning for WHY one choice was made over plausible alternatives. This enables generalization to novel cases the model hasn't seen. More detailed instructions (B) haven't worked — adding more of what's failing won't fix it. tool_choice: \"any\" ensures a tool is called but doesn't determine which one.",
+    whyWrong: {
+      B: "If detailed instructions already produce inconsistent results, making them longer and more detailed is unlikely to fix the underlying pattern-matching challenge. Examples provide what instructions cannot: demonstrated judgment.",
+      C: "tool_choice: \"any\" guarantees a tool call but leaves tool selection to the model — the same model that's already making inconsistent selections. It doesn't fix selection.",
+      D: "Consolidating tools changes the tool architecture, which may be valid long-term but doesn't address the immediate inconsistency caused by ambiguous selection criteria."
+    },
+    studyLinks: [{ text: "Few-Shot Prompting", anchor: "d4-fewshot" }],
+    docLinks: []
+  },
+  {
+    id: 39, domain: 4,
+    question: "What is the difference between tool_choice: \"auto\" and tool_choice: \"any\"?",
+    options: [
+      { id: 'A', text: "\"auto\" allows the model to optionally return text instead of calling a tool; \"any\" guarantees the model calls at least one tool." },
+      { id: 'B', text: "\"auto\" selects the best tool automatically; \"any\" selects a random tool from the list." },
+      { id: 'C', text: "\"auto\" works with single tools; \"any\" is required for multiple tools." },
+      { id: 'D', text: "Both guarantee a tool call but differ only in speed." }
+    ],
+    correct: 'A',
+    explanation: "\"auto\" lets the model decide whether to call a tool or return conversational text — the model may skip tool use entirely. \"any\" GUARANTEES the model calls at least one tool from the provided list, though it chooses which. For guaranteed structured output, use \"any\" or forced selection.",
+    whyWrong: {
+      B: "Both options leave tool choice to the model. The difference is whether a tool call is mandatory (any) or optional (auto).",
+      C: "The number of tools in the list doesn't determine which tool_choice to use. Both work with any number of tools.",
+      D: "These are not equivalent. \"auto\" may produce text responses; \"any\" guarantees tool execution."
+    },
+    studyLinks: [{ text: "Structured Output", anchor: "d4-tooluse" }],
+    docLinks: []
+  },
+  {
+    id: 40, domain: 4,
+    question: "Your extraction schema has a required \"publication_date\" field but many source documents don't include dates. What is the primary risk?",
+    options: [
+      { id: 'A', text: "The model may fabricate a date value to satisfy the required field constraint." },
+      { id: 'B', text: "The tool_use call will fail with a schema validation error when date is missing." },
+      { id: 'C', text: "The model will skip all other fields if it cannot populate this required field." },
+      { id: 'D', text: "tool_use automatically treats missing required fields as null." }
+    ],
+    correct: 'A',
+    explanation: "When a required field cannot be populated from the source document, the model tends to fabricate a plausible value rather than leave a required field empty — this is hallucination driven by schema constraints. The fix is to make such fields optional/nullable, allowing the model to return null when the information isn't available.",
+    whyWrong: {
+      B: "tool_use with JSON schema validates the model's output against the schema, not the source document. If the model fabricates a date, the schema won't catch it.",
+      C: "The model won't abandon the entire extraction — it will attempt to satisfy all fields, including fabricating required ones.",
+      D: "tool_use does not automatically handle missing required fields. Required means required — the model must provide a value, leading to potential fabrication."
+    },
+    studyLinks: [{ text: "Structured Output", anchor: "d4-tooluse" }],
+    docLinks: []
+  },
+  {
+    id: 41, domain: 4,
+    question: "A tool_use extraction returns \"total_amount\": \"approximately $500\" instead of a number. What type of error is this?",
+    options: [
+      { id: 'A', text: "A semantic validation error — wrong value type/format despite valid JSON syntax." },
+      { id: 'B', text: "A JSON syntax error that tool_use should have prevented." },
+      { id: 'C', text: "A schema compliance error that proves tool_use isn't working correctly." },
+      { id: 'D', text: "A transient error that will resolve with automatic retry." }
+    ],
+    correct: 'A',
+    explanation: "tool_use with JSON schemas eliminates JSON SYNTAX errors (missing braces, invalid escaping, malformed JSON). It does NOT eliminate semantic errors — values that are syntactically valid JSON but wrong in type or meaning (a string where a number is expected, values that don't sum correctly). This is a semantic validation error requiring retry-with-error-feedback.",
+    whyWrong: {
+      B: "The JSON is syntactically valid — a string value in a JSON document is legal JSON. tool_use can't reject it as malformed JSON; it would need schema type validation.",
+      C: "tool_use is working correctly by producing valid JSON. The schema says 'number' but the model put a string — that's a semantic issue, not a tool failure.",
+      D: "Transient errors are infrastructure failures (timeouts, service unavailability). This is a model behavior issue requiring feedback-guided correction."
+    },
+    studyLinks: [{ text: "Validation & Retry", anchor: "d4-retry" }],
+    docLinks: []
+  },
+  {
+    id: 42, domain: 4,
+    question: "When is retry-with-error-feedback NOT an effective strategy?",
+    options: [
+      { id: 'A', text: "When the required information is simply absent from the source document provided to the model." },
+      { id: 'B', text: "When the model produced a value in the wrong field." },
+      { id: 'C', text: "When the model used an incorrect date format." },
+      { id: 'D', text: "When the model's JSON had structural formatting issues." }
+    ],
+    correct: 'A',
+    explanation: "Retry with error feedback is effective when the model HAS the information but applied it incorrectly (wrong field, wrong format, structural issues). If the information simply doesn't exist in the source document, no amount of retrying will make it appear. Retries help with: format mismatches, wrong field placement, structural errors. They don't help when: information is genuinely absent.",
+    whyWrong: {
+      B: "Wrong field placement is a semantic error the model CAN correct when told which value went to the wrong field. Retry with feedback helps here.",
+      C: "Wrong date format is easily correctable with specific feedback ('dates must be YYYY-MM-DD format, not MM/DD/YYYY'). Retry with feedback is effective.",
+      D: "Structural JSON issues can be corrected by showing the model the specific syntax error. Retry with feedback works well for structural corrections."
+    },
+    studyLinks: [{ text: "Validation & Retry", anchor: "d4-retry" }],
+    docLinks: []
+  },
+  {
+    id: 43, domain: 4,
+    question: "Which workflow is APPROPRIATE for the Message Batches API?",
+    options: [
+      { id: 'A', text: "Nightly batch processing of 10,000 customer documents for compliance review, results needed the next morning." },
+      { id: 'B', text: "Pre-merge code review that must complete before a developer can push their branch." },
+      { id: 'C', text: "Real-time chat response for a customer-facing support bot." },
+      { id: 'D', text: "Automated test generation that runs during the developer's commit hook." }
+    ],
+    correct: 'A',
+    explanation: "The Batch API (50% savings, up to 24-hour processing, no latency SLA) is designed for latency-tolerant, non-blocking workloads. Overnight compliance review fits perfectly — results needed 'next morning' accommodates up to 24 hours. Pre-merge checks (B), customer-facing chat (C), and commit hooks (D) all require synchronous responses that users/developers are actively waiting for.",
+    whyWrong: {
+      B: "Pre-merge checks are blocking — the developer cannot merge until completion. The batch API's 24-hour maximum makes it unacceptable for blocking workflows.",
+      C: "Customer-facing chat requires sub-second responses. The batch API offers no latency guarantees and processes asynchronously.",
+      D: "Commit hooks run synchronously during git commit — the developer's terminal blocks until they complete. Batch processing would hang the commit indefinitely."
+    },
+    studyLinks: [{ text: "Batch Processing", anchor: "d4-batch" }],
+    docLinks: []
+  },
+  {
+    id: 44, domain: 4,
+    question: "Why does a model reviewing its own generated code miss more issues than an independent instance?",
+    options: [
+      { id: 'A', text: "The model retains reasoning context from generation, making it less likely to question decisions it already made." },
+      { id: 'B', text: "The generating session has consumed context window space that limits review quality." },
+      { id: 'C', text: "Extended thinking must be enabled for self-review to be effective, which is not the default." },
+      { id: 'D', text: "The model's training data biases it toward approving its own output patterns." }
+    ],
+    correct: 'A',
+    explanation: "Context retention is the key concept. The model 'remembers' why it made architectural decisions, which algorithm it chose and why, what edge cases it considered. This makes it systematically less likely to challenge those decisions during review. An independent instance with no prior reasoning context approaches the code with fresh eyes.",
+    whyWrong: {
+      B: "Token consumption and context window usage don't directly limit review quality in the way described. The problem is reasoning context retention, not token scarcity.",
+      C: "Extended thinking improves reasoning depth but doesn't eliminate the self-review bias — the model still operates with the same retained generation context.",
+      D: "The training data argument is too vague and doesn't explain why the same model reviewing different code (written by another model) would be more effective."
+    },
+    studyLinks: [{ text: "Multi-Instance Review", anchor: "d4-review" }],
+    docLinks: []
+  },
+  {
+    id: 45, domain: 4,
+    question: "An enum field has values [\"approved\", \"rejected\", \"pending\"]. A source document has status \"under review\". What is the risk without an escape hatch?",
+    options: [
+      { id: 'A', text: "The model may force the value into one of the three enum options, silently misclassifying \"under review\" as \"pending\"." },
+      { id: 'B', text: "The extraction fails with a schema validation error for the unknown enum value." },
+      { id: 'C', text: "The model correctly returns null for the field since the value doesn't match any option." },
+      { id: 'D', text: "Strict enums automatically handle unknown values by selecting the closest semantic match." }
+    ],
+    correct: 'A',
+    explanation: "With a strict enum and no escape hatch, the model faces a constraint: it must produce one of the valid values. It will choose the closest-seeming option (likely \"pending\" for \"under review\") rather than accurately representing the actual status. This is silent misclassification. The fix: add \"other\" + detail string pattern, or add \"unclear\" as a valid enum value.",
+    whyWrong: {
+      B: "Schema validation checks that the output is a valid enum member, not that it matches the source document's text. The model can produce \"pending\" and pass validation — even if it's wrong.",
+      C: "The model will NOT return null for a required field — it will select an enum value to satisfy the constraint. This is the hallucination/misclassification risk.",
+      D: "Strict enums don't automatically handle unknown values gracefully. The model selects an existing value, not a conceptually accurate one."
+    },
+    studyLinks: [{ text: "Structured Output", anchor: "d4-tooluse" }],
+    docLinks: []
+  },
+
+  // ═══ ADDITIONAL DOMAIN 5 ═══
+  {
+    id: 46, domain: 5,
+    question: "During a long investigation session, the model starts referencing \"typical patterns\" rather than the specific classes discovered earlier in the same session. This indicates:",
+    options: [
+      { id: 'A', text: "Context degradation — the model's attention on early specific findings has deteriorated." },
+      { id: 'B', text: "The model is helpfully generalizing to improve advice quality." },
+      { id: 'C', text: "The context window has been exceeded and earlier content was dropped." },
+      { id: 'D', text: "The model needs to be asked follow-up questions to surface specific findings." }
+    ],
+    correct: 'A',
+    explanation: "Context degradation occurs before the context window is fully exceeded. The model gives increasingly inconsistent answers and falls back to general knowledge rather than session-specific findings. Solutions: scratchpad files to persist key findings, /compact to reduce context usage, subagent delegation for verbose exploration phases.",
+    whyWrong: {
+      B: "Substituting generic knowledge for session-specific findings is a degradation failure, not a helpful generalization. The model should be citing what it specifically found.",
+      C: "Context degradation happens before the window is exceeded — it's a gradual quality decline, not a hard cutoff. Content from early in the session is still technically present but receives less attention.",
+      D: "While follow-up questions may temporarily help, they don't fix the underlying context degradation. Scratchpad files and subagent delegation are the structural solutions."
+    },
+    studyLinks: [{ text: "Large Codebase Context", anchor: "d5-codebase" }],
+    docLinks: []
+  },
+  {
+    id: 47, domain: 5,
+    question: "Progressive summarization condenses \"customer wants refund of $127.43 for order #98234 placed on March 15\" to \"customer has a refund issue.\" Why is this problematic?",
+    options: [
+      { id: 'A', text: "Critical transactional facts (amounts, order numbers, dates) are lost and cannot be recovered from context." },
+      { id: 'B', text: "The summary is too short to be useful as context for the next turn." },
+      { id: 'C', text: "Summarization should never be used for customer support conversations." },
+      { id: 'D', text: "The model should ask clarifying questions instead of summarizing." }
+    ],
+    correct: 'A',
+    explanation: "Progressive summarization's key risk is loss of precision for specific data: numerical values ($127.43), identifiers (#98234), dates (March 15), and customer-stated expectations. Once summarized to vague references, this information is gone from context and cannot be recovered without re-querying the original source. The fix: extract transactional facts into a persistent 'case facts' block outside the summarized history.",
+    whyWrong: {
+      B: "The summary being short isn't the core problem. A short but accurate summary is fine. The problem is losing specific, non-recoverable data.",
+      C: "Summarization can be appropriate for customer support conversations — the issue is HOW it's done, not whether to do it. Extracting key facts before summarizing is the correct approach.",
+      D: "Asking clarifying questions is a different concern. The issue is the loss of already-provided specific information during the summarization process."
+    },
+    studyLinks: [{ text: "Context Window Management", anchor: "d5-context" }],
+    docLinks: []
+  },
+  {
+    id: 48, domain: 5,
+    question: "A customer says: \"I want to speak to a human agent.\" The AI has already identified this as a simple return it can handle in 30 seconds. What should the agent do?",
+    options: [
+      { id: 'A', text: "Escalate immediately to a human agent." },
+      { id: 'B', text: "Offer to resolve the issue quickly since it's simple, then escalate only if the customer insists." },
+      { id: 'C', text: "Resolve the issue automatically since it's clearly within the agent's capability." },
+      { id: 'D', text: "Ask clarifying questions to confirm whether human escalation is truly necessary." }
+    ],
+    correct: 'A',
+    explanation: "Explicit customer requests for human agents must be honored IMMEDIATELY. Do not attempt investigation, offer to resolve first, or question the request. This is a non-negotiable escalation trigger. Offering to resolve (B) is only acceptable when the customer's desire for human intervention is ambiguous — explicit statements are not ambiguous.",
+    whyWrong: {
+      B: "Offering to resolve first — even when you can — disrespects an explicit customer preference. The customer didn't ask for resolution efficiency; they asked for a human.",
+      C: "Capability to resolve is irrelevant when a customer explicitly requests human escalation. Autonomously resolving against expressed preference is incorrect.",
+      D: "There's nothing to clarify. \"I want to speak to a human agent\" is an explicit, unambiguous request. Questioning it creates friction and disrespects the customer's stated preference."
+    },
+    studyLinks: [{ text: "Escalation Patterns", anchor: "d5-escalation" }],
+    docLinks: []
+  },
+  {
+    id: 49, domain: 5,
+    question: "A customer requests competitor price matching. Your policy covers price matching only for your own site's historical prices. The policy is silent on competitor matching. What should the agent do?",
+    options: [
+      { id: 'A', text: "Escalate to a human agent because the policy has a gap on this specific request." },
+      { id: 'B', text: "Deny the request since competitor price matching isn't explicitly covered." },
+      { id: 'C', text: "Apply the price matching policy by analogy since the intent is similar to own-site matching." },
+      { id: 'D', text: "Ask the customer to provide evidence of the competitor's price before making a decision." }
+    ],
+    correct: 'A',
+    explanation: "Policy gaps (policy is silent on the specific request) are an explicit escalation trigger — even if the case seems simple. The agent should not extrapolate policy by analogy (C) — that's a human decision. Denying (B) would be wrong if competitor matching is actually allowed. Requesting evidence (D) implies the agent is going to make a decision it shouldn't be making autonomously.",
+    whyWrong: {
+      B: "Denying something not explicitly prohibited is overstepping. Policy silence ≠ policy prohibition. This requires a human decision-maker.",
+      C: "Applying policies by analogy is specifically what agents should NOT do for policy gaps. The agent doesn't have authority to extrapolate into undefined policy territory.",
+      D: "Requesting evidence implies the agent will decide whether to honor the request — but the agent can't make that decision when policy is silent on the matter."
+    },
+    studyLinks: [{ text: "Escalation Patterns", anchor: "d5-escalation" }],
+    docLinks: []
+  },
+  {
+    id: 50, domain: 5,
+    question: "Which is NOT a valid escalation trigger for a customer support agent?",
+    options: [
+      { id: 'A', text: "Customer's message contains multiple negative sentiment words." },
+      { id: 'B', text: "Customer explicitly requests to speak with a human representative." },
+      { id: 'C', text: "The agent has made three attempts to resolve the issue without meaningful progress." },
+      { id: 'D', text: "The customer's request involves a policy area the agent's documentation doesn't address." }
+    ],
+    correct: 'A',
+    explanation: "Sentiment-based escalation is explicitly identified as an unreliable proxy for case complexity. Negative sentiment doesn't correlate with whether an agent can or should resolve the issue. An angry customer with a simple return should be resolved (not escalated). A politely-phrased complex policy exception should be escalated. Valid triggers: explicit requests (B), inability to progress (C), policy gaps (D).",
+    whyWrong: {
+      B: "Explicit requests for human agents are the strongest escalation trigger — must be honored immediately.",
+      C: "Inability to make meaningful progress after multiple attempts is a valid trigger — don't loop indefinitely.",
+      D: "Policy gaps are a valid escalation trigger — agents shouldn't extrapolate into undefined policy territory."
+    },
+    studyLinks: [{ text: "Escalation Patterns", anchor: "d5-escalation" }],
+    docLinks: []
+  },
+  {
+    id: 51, domain: 5,
+    question: "Two credible sources report conflicting AI adoption rates: Source A says 67%, Source B says 43%. How should a synthesis agent handle this?",
+    options: [
+      { id: 'A', text: "Include both values with their source attributions and note the conflict explicitly." },
+      { id: 'B', text: "Average the two values and report 55% as a balanced estimate." },
+      { id: 'C', text: "Use the more recent publication date and discard the older statistic." },
+      { id: 'D', text: "Flag it as a data quality issue and omit the statistic from the report entirely." }
+    ],
+    correct: 'A',
+    explanation: "Conflicting statistics from credible sources should be annotated with both values and their source attributions, with an explicit note about the conflict. The coordinator (or human reviewer) should decide how to reconcile. The difference is often explained by publication dates — 43% in 2019 and 67% in 2023 are consistent temporal data, not contradictions. The synthesis agent shouldn't arbitrarily resolve conflicts.",
+    whyWrong: {
+      B: "Averaging creates a number that neither source reported and may represent no real measurement. This is a form of hallucination.",
+      C: "Automatically discarding the older source loses valuable temporal trend data. Publication date differences often explain what looks like a contradiction.",
+      D: "Omitting the statistic entirely loses data that's still valuable. Conflicting statistics with attribution are more useful than silence."
+    },
+    studyLinks: [{ text: "Information Provenance", anchor: "d5-provenance" }],
+    docLinks: []
+  },
+  {
+    id: 52, domain: 5,
+    question: "A data extraction system achieves 97% overall accuracy. A team member proposes significantly reducing human review. What's missing from this analysis?",
+    options: [
+      { id: 'A', text: "Accuracy must be analyzed by document type and field segment — 97% overall may mask poor performance on specific segments." },
+      { id: 'B', text: "97% is the industry standard threshold; human review reduction is justified at this level." },
+      { id: 'C', text: "The analysis needs to show 97% accuracy over a statistically larger sample size." },
+      { id: 'D', text: "The system must be deployed in production before human review can be reduced." }
+    ],
+    correct: 'A',
+    explanation: "Aggregate accuracy masks segment-level failures. A system might be 99.9% accurate on digital invoices but 58% accurate on handwritten forms. Reducing human review based on overall accuracy removes oversight from the failing segment, causing systematic errors in that segment. Always analyze by document type AND field before reducing human review.",
+    whyWrong: {
+      B: "There is no universal industry standard threshold. The right threshold depends on the consequences of errors in each specific segment.",
+      C: "Sample size is a valid concern but secondary to segment-level analysis. Even with a large sample, if it's all from one document type, the 97% figure misleads.",
+      D: "Production deployment doesn't resolve the measurement gap. The segmentation analysis must happen before reducing review regardless of deployment stage."
+    },
+    studyLinks: [{ text: "Human Review & Confidence", anchor: "d5-confidence" }],
+    docLinks: []
+  },
+  {
+    id: 53, domain: 5,
+    question: "A subagent returns {\"status\": \"completed\", \"results\": []}. How should the coordinator interpret this?",
+    options: [
+      { id: 'A', text: "This is ambiguous — it could be a valid empty search result OR a failed query being silently suppressed as success." },
+      { id: 'B', text: "This definitely indicates a successful search that found no matching results." },
+      { id: 'C', text: "This indicates the subagent encountered an error that should trigger retry." },
+      { id: 'D', text: "This means the search is still in progress and the coordinator should poll for results." }
+    ],
+    correct: 'A',
+    explanation: "Empty results with a 'completed' status are inherently ambiguous. The subagent should distinguish explicitly: a valid empty result (query executed successfully, no matches exist) vs. an access failure (query couldn't execute, being masked as completion). These require opposite coordinator responses. Without explicit signaling, the coordinator must treat this as ambiguous and cannot make an optimal recovery decision.",
+    whyWrong: {
+      B: "Assuming success on empty results is the 'silent suppression' anti-pattern. The same response format is used for both valid empty results and failed queries that return nothing.",
+      C: "Assuming failure on empty results causes unnecessary retries for valid queries that legitimately found nothing.",
+      D: "Nothing in the response indicates in-progress state. The 'completed' status suggests the operation has finished."
+    },
+    studyLinks: [{ text: "Error Propagation", anchor: "d5-errors" }],
+    docLinks: []
+  },
+  {
+    id: 54, domain: 5,
+    question: "The 'lost in the middle' effect means which of the following?",
+    options: [
+      { id: 'A', text: "Models reliably process information at the beginning and end of long inputs but may miss findings in the middle." },
+      { id: 'B', text: "Models lose track of their overall goal when given too many subtasks in the middle of a workflow." },
+      { id: 'C', text: "Context windows that are half-full show worse performance than either very short or very long contexts." },
+      { id: 'D', text: "Models perform well on first and last exam questions but poorly on middle questions." }
+    ],
+    correct: 'A',
+    explanation: "The 'lost in the middle' effect is a specific attention characteristic: models give highest quality attention to content at the START and END of their input, but content positioned in the MIDDLE of long inputs receives lower attention quality. Key implication: place the most important findings at the beginning or end of aggregated inputs, not buried in the middle.",
+    whyWrong: {
+      B: "This describes a different concept — goal drift in multi-step workflows. The 'lost in the middle' effect is specifically about attention quality on long inputs.",
+      C: "There is no documented 'half-full context window' performance phenomenon. The effect is about POSITION within the input, not context window fill level.",
+      D: "This would be an exam performance phenomenon, not a property of language model attention. The effect refers to position within a single input/prompt."
+    },
+    studyLinks: [{ text: "Context Window Management", anchor: "d5-context" }],
+    docLinks: []
+  },
+  {
+    id: 55, domain: 5,
+    question: "A subagent encounters a transient failure (database connection timeout). What is the correct handling strategy?",
+    options: [
+      { id: 'A', text: "Attempt local recovery (retry with backoff). If unresolvable, propagate structured error context including failure type, what was attempted, and partial results." },
+      { id: 'B', text: "Immediately propagate the raw exception to the coordinator for centralized handling." },
+      { id: 'C', text: "Silently retry 3 times, then return an empty result set marked as successful if all retries fail." },
+      { id: 'D', text: "Return a generic 'service unavailable' status to the coordinator." }
+    ],
+    correct: 'A',
+    explanation: "Transient failures should be handled locally first — the subagent retries with appropriate backoff since it has the context to determine retry strategy. Only if local recovery fails should it propagate to the coordinator, with structured context (failure type, attempted query, partial results, alternatives tried). This gives the coordinator what it needs for intelligent recovery decisions.",
+    whyWrong: {
+      B: "Immediately propagating transient failures to the coordinator adds coordination overhead and loses the subagent's ability to handle the common case (retry succeeds) locally.",
+      C: "Returning empty results as success is the 'silent suppression' anti-pattern — the coordinator proceeds thinking the search found nothing when actually it failed.",
+      D: "Generic 'service unavailable' hides valuable context (what was attempted, partial results) that the coordinator needs for recovery decisions."
+    },
+    studyLinks: [{ text: "Error Propagation", anchor: "d5-errors" }],
+    docLinks: []
+  }
+];
+
+// ── State ──
+let questions = [];
+let currentIdx = 0;
+let answered = {};
+let domainFilter = 'all';
+
+// ── DOM ──
+const questionArea = document.getElementById('question-area');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const qCounter = document.getElementById('q-counter');
+const progressFill = document.getElementById('progress-fill');
+const scoreDisplay = document.getElementById('score-display');
+const domainFilterEl = document.getElementById('domain-filter');
+const shuffleToggle = document.getElementById('shuffle-toggle');
+const restartBtn = document.getElementById('restart-btn');
+const resultsArea = document.getElementById('results-area');
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function filterQuestions() {
+  let q = domainFilter === 'all' ? [...QUESTIONS] : QUESTIONS.filter(q => q.domain === parseInt(domainFilter));
+  if (shuffleToggle.checked) q = shuffle(q);
+  return q;
+}
+
+function domainColor(d) {
+  return ['','var(--d1)','var(--d2)','var(--d3)','var(--d4)','var(--d5)'][d] || '#888';
+}
+
+function domainBadgeClass(d) {
+  return ['','d1-badge','d2-badge','d3-badge','d4-badge','d5-badge'][d] || '';
+}
+
+function domainName(d) {
+  return ['','Agentic Architecture','Tool Design & MCP','Claude Code Config','Prompt Engineering','Context & Reliability'][d] || '';
+}
+
+function getScore() {
+  let correct = 0;
+  Object.keys(answered).forEach(idx => {
+    const q = questions[parseInt(idx)];
+    if (answered[idx] === q.correct) correct++;
+  });
+  return { correct, total: Object.keys(answered).length };
+}
+
+function renderQuestion(idx) {
+  const q = questions[idx];
+  if (!q) return;
+  const isAnswered = answered[idx] !== undefined;
+  const selected = answered[idx];
+
+  const officialTag = q.official ? '<span class="scenario-tag">Official Sample Question</span>' : '';
+  const scenarioTag = q.scenario ? `<span class="scenario-tag">📋 ${q.scenario}</span>` : '';
+
+  let optionsHtml = q.options.map(opt => {
+    let cls = 'option-btn';
+    if (isAnswered) {
+      if (opt.id === q.correct) cls += ' revealed-correct';
+      if (opt.id === selected && selected !== q.correct) cls += ' incorrect';
+      if (opt.id === selected && selected === q.correct) cls = 'option-btn correct';
+    }
+    return `<button class="${cls}" data-id="${opt.id}" ${isAnswered ? 'disabled' : ''}>
+      <span class="option-letter">${opt.id}</span>
+      <span>${opt.text}</span>
+    </button>`;
+  }).join('');
+
+  let explanationHtml = '';
+  if (isAnswered) {
+    const isRight = selected === q.correct;
+    const wrongOptions = q.options.filter(o => o.id !== q.correct && o.id !== selected);
+    let whyWrongHtml = '';
+    if (q.whyWrong) {
+      const entries = Object.entries(q.whyWrong);
+      whyWrongHtml = `<div class="why-wrong">
+        <div style="font-weight:600;font-size:0.8rem;margin-bottom:0.375rem;color:var(--text-muted);">Why the others are wrong:</div>
+        ${entries.map(([k, v]) => `<div class="why-wrong-item">
+          <span class="why-wrong-letter ${k === q.correct ? 'why-wrong-correct' : ''}">${k})</span>
+          <span>${v}</span>
+        </div>`).join('')}
+      </div>`;
+    }
+
+    let studyLinksHtml = '';
+    if (q.studyLinks && q.studyLinks.length > 0) {
+      studyLinksHtml = `<div class="study-links">
+        <span class="study-link-label">Study this →</span>
+        ${q.studyLinks.map(l => `<a href="study.html#${l.anchor}" class="study-link" target="_blank">${l.text}</a>`).join('')}
+        ${q.docLinks && q.docLinks.length > 0 ? q.docLinks.map(l => `<a href="${l.url}" class="doc-link" target="_blank" style="font-size:0.78rem;">${l.text}</a>`).join('') : ''}
+      </div>`;
+    }
+
+    explanationHtml = `<div class="explanation show">
+      <div class="explanation-header">${isRight ? '✓ Correct!' : '✗ Incorrect — Correct answer: ' + q.correct}</div>
+      <p style="margin-bottom:0.5rem;">${q.explanation}</p>
+      ${whyWrongHtml}
+      ${studyLinksHtml}
+    </div>`;
+  }
+
+  questionArea.innerHTML = `<div class="question-card">
+    <div class="question-meta">
+      <span class="q-num">Q${idx + 1} of ${questions.length}</span>
+      <span class="domain-badge ${domainBadgeClass(q.domain)}" style="font-size:0.72rem;">D${q.domain} · ${domainName(q.domain)}</span>
+      ${officialTag}
+      ${scenarioTag}
+    </div>
+    <div class="question-text">${q.question}</div>
+    <div class="options">${optionsHtml}</div>
+    ${explanationHtml}
+  </div>`;
+
+  // Attach click handlers
+  if (!isAnswered) {
+    questionArea.querySelectorAll('.option-btn').forEach(btn => {
+      btn.addEventListener('click', () => handleAnswer(idx, btn.dataset.id));
+    });
+  }
+
+  updateNav();
+}
+
+function handleAnswer(idx, optId) {
+  answered[idx] = optId;
+  const { correct, total } = getScore();
+  const progress = ((idx + 1) / questions.length) * 100;
+  progressFill.style.width = progress + '%';
+  scoreDisplay.textContent = `${correct} / ${total}`;
+  renderQuestion(idx);
+}
+
+function updateNav() {
+  prevBtn.disabled = currentIdx === 0;
+  nextBtn.disabled = currentIdx >= questions.length - 1;
+  qCounter.textContent = `${currentIdx + 1} / ${questions.length}`;
+
+  // Show results if on last question and answered
+  if (currentIdx === questions.length - 1 && answered[currentIdx] !== undefined) {
+    nextBtn.disabled = true;
+    showResults();
+  }
+}
+
+function showResults() {
+  const { correct, total } = getScore();
+  const pct = Math.round((correct / questions.length) * 100);
+  const scaled = Math.round((correct / questions.length) * 900 + 100);
+  const pass = scaled >= 720;
+
+  resultsArea.style.display = 'block';
+  resultsArea.innerHTML = `<div class="concept-card" style="text-align:center;padding:2rem;">
+    <h2 style="margin-top:0;">Results</h2>
+    <div class="score-ring ${pass ? 'pass' : 'fail'}" style="margin:1rem auto;">
+      <span class="score-pct" style="color:${pass ? 'var(--correct)' : 'var(--incorrect)'};">${pct}%</span>
+      <span class="score-label">${correct}/${questions.length}</span>
+    </div>
+    <p><strong>Scaled Score:</strong> ~${scaled} / 1000 ${pass ? '✓ PASS' : '✗ Below 720'}</p>
+    <p class="text-muted text-sm">Score is approximate. Real exam uses calibrated scaling.</p>
+    <div style="display:flex;gap:0.75rem;justify-content:center;margin-top:1rem;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="location.reload()">Restart Exam</button>
+      <a href="study.html" class="btn btn-secondary">Back to Study Guide</a>
+    </div>
+  </div>`;
+  resultsArea.scrollIntoView({ behavior: 'smooth' });
+}
+
+function init() {
+  answered = {};
+  currentIdx = 0;
+  questions = filterQuestions();
+  resultsArea.style.display = 'none';
+  resultsArea.innerHTML = '';
+  progressFill.style.width = '0%';
+  scoreDisplay.textContent = '0 / 0';
+  renderQuestion(0);
+}
+
+prevBtn.addEventListener('click', () => {
+  if (currentIdx > 0) { currentIdx--; renderQuestion(currentIdx); }
+});
+
+nextBtn.addEventListener('click', () => {
+  if (currentIdx < questions.length - 1) { currentIdx++; renderQuestion(currentIdx); }
+});
+
+domainFilterEl.addEventListener('change', () => {
+  domainFilter = domainFilterEl.value;
+  init();
+});
+
+restartBtn.addEventListener('click', init);
+shuffleToggle.addEventListener('change', init);
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' && !nextBtn.disabled) { currentIdx++; renderQuestion(currentIdx); }
+  if (e.key === 'ArrowLeft' && !prevBtn.disabled) { currentIdx--; renderQuestion(currentIdx); }
+  const q = questions[currentIdx];
+  if (!answered[currentIdx] && q) {
+    const map = { '1': 'A', '2': 'B', '3': 'C', '4': 'D', 'a': 'A', 'b': 'B', 'c': 'C', 'd': 'D' };
+    if (map[e.key]) handleAnswer(currentIdx, map[e.key]);
+  }
+});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCAF Study Hub</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .hero {
+      background: linear-gradient(135deg, #0d1117 0%, #1a1f2e 100%);
+      color: #fff;
+      padding: 3rem 2.5rem;
+      border-bottom: 1px solid #21262d;
+    }
+    .hero h1 { color: #fff; font-size: 2rem; margin-bottom: 0.5rem; }
+    .hero p { color: #8b949e; font-size: 1rem; max-width: 580px; margin-bottom: 0; }
+    .hero-accent { color: var(--accent); }
+    .hero-meta {
+      display: flex; gap: 1.5rem; margin-top: 1.25rem; flex-wrap: wrap;
+    }
+    .hero-meta-item {
+      font-size: 0.82rem; color: #8b949e;
+    }
+    .hero-meta-item strong { color: #e2e8f0; }
+    .content-area { padding: 2rem 2.5rem; max-width: 1000px; }
+    .section-title {
+      font-size: 1rem; font-weight: 700; margin-bottom: 1rem;
+      color: var(--text); display: flex; align-items: center; gap: 0.5rem;
+    }
+    .weight-pill {
+      font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem;
+      border-radius: 20px; color: white;
+    }
+    .d1-pill { background: var(--d1); }
+    .d2-pill { background: var(--d2); }
+    .d3-pill { background: var(--d3); }
+    .d4-pill { background: var(--d4); }
+    .d5-pill { background: var(--d5); }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    .passing-info {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.25rem;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem; margin-top: 1.5rem; box-shadow: var(--shadow);
+    }
+    .passing-stat { text-align: center; }
+    .passing-stat .stat-val {
+      font-size: 1.75rem; font-weight: 800; color: var(--accent);
+    }
+    .passing-stat .stat-label {
+      font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">CCAF <span>Study Hub</span></a>
+  <ul class="topnav-links">
+    <li><a href="index.html" class="active">Home</a></li>
+    <li><a href="study.html">Study Guide</a></li>
+    <li><a href="exam.html">Practice Exam</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <h1>Claude Certified <span class="hero-accent">Architect</span> — Foundations</h1>
+  <p>Comprehensive study resource covering all 5 exam domains. Study the concepts, practice with scenario-based questions, and review detailed explanations.</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item"><strong>5</strong> Domains</div>
+    <div class="hero-meta-item"><strong>720 / 1000</strong> Passing Score</div>
+    <div class="hero-meta-item"><strong>77+</strong> Practice Questions</div>
+    <div class="hero-meta-item"><strong>6</strong> Exam Scenarios</div>
+  </div>
+</div>
+
+<div class="content-area">
+  <div class="action-grid" style="margin-top: 0;">
+    <a href="study.html" class="action-card">
+      <div class="action-icon">📖</div>
+      <div class="action-title">Study Guide</div>
+      <div class="action-sub">Deep explanations of all 5 domains, task statements, concepts, edge cases, and counterexamples. Cross-linked to official docs.</div>
+    </a>
+    <a href="exam.html" class="action-card">
+      <div class="action-icon">✍️</div>
+      <div class="action-title">Practice Exam</div>
+      <div class="action-sub">77+ scenario-based multiple choice questions. Explanations reveal after each answer. Filter by domain or run a full mixed exam.</div>
+    </a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-title">Exam Domains</div>
+
+  <div class="domain-grid">
+    <a href="study.html#domain-1" class="domain-card d1">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span class="weight-pill d1-pill">27%</span>
+        <span class="domain-card-title">Domain 1</span>
+      </div>
+      <div style="font-weight:600;font-size:0.9rem;">Agentic Architecture &amp; Orchestration</div>
+      <div class="domain-card-sub">Agentic loops · stop_reason · Multi-agent · Hooks · Task decomposition · Session management</div>
+    </a>
+    <a href="study.html#domain-2" class="domain-card d2">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span class="weight-pill d2-pill">18%</span>
+        <span class="domain-card-title">Domain 2</span>
+      </div>
+      <div style="font-weight:600;font-size:0.9rem;">Tool Design &amp; MCP Integration</div>
+      <div class="domain-card-sub">Tool descriptions · Structured errors · tool_choice · MCP scoping · Built-in tools</div>
+    </a>
+    <a href="study.html#domain-3" class="domain-card d3">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span class="weight-pill d3-pill">20%</span>
+        <span class="domain-card-title">Domain 3</span>
+      </div>
+      <div style="font-weight:600;font-size:0.9rem;">Claude Code Config &amp; Workflows</div>
+      <div class="domain-card-sub">CLAUDE.md hierarchy · Rules · Skills · Slash commands · Plan mode · CI/CD</div>
+    </a>
+    <a href="study.html#domain-4" class="domain-card d4">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span class="weight-pill d4-pill">20%</span>
+        <span class="domain-card-title">Domain 4</span>
+      </div>
+      <div style="font-weight:600;font-size:0.9rem;">Prompt Engineering &amp; Structured Output</div>
+      <div class="domain-card-sub">Explicit criteria · Few-shot · tool_use schemas · Validation-retry · Batch API · Multi-pass review</div>
+    </a>
+    <a href="study.html#domain-5" class="domain-card d5">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <span class="weight-pill d5-pill">15%</span>
+        <span class="domain-card-title">Domain 5</span>
+      </div>
+      <div style="font-weight:600;font-size:0.9rem;">Context Management &amp; Reliability</div>
+      <div class="domain-card-sub">Lost-in-middle · Progressive summarization · Escalation · Error propagation · Provenance</div>
+    </a>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-title">Exam Scenarios</div>
+  <p class="text-sm text-muted" style="margin-bottom:1rem;">4 of these 6 scenarios are presented at random on the real exam. Questions are scenario-framed.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.75rem;">
+    <div class="concept-card" style="margin-bottom:0;">
+      <h3 style="font-size:0.85rem;margin:0 0 0.25rem;">🎧 Scenario 1</h3>
+      <div style="font-weight:600;font-size:0.875rem;margin-bottom:0.25rem;">Customer Support Resolution Agent</div>
+      <div class="text-sm text-muted">Domains: 1, 2, 5</div>
+    </div>
+    <div class="concept-card" style="margin-bottom:0;">
+      <h3 style="font-size:0.85rem;margin:0 0 0.25rem;">💻 Scenario 2</h3>
+      <div style="font-weight:600;font-size:0.875rem;margin-bottom:0.25rem;">Code Generation with Claude Code</div>
+      <div class="text-sm text-muted">Domains: 3, 5</div>
+    </div>
+    <div class="concept-card" style="margin-bottom:0;">
+      <h3 style="font-size:0.85rem;margin:0 0 0.25rem;">🔬 Scenario 3</h3>
+      <div style="font-weight:600;font-size:0.875rem;margin-bottom:0.25rem;">Multi-Agent Research System</div>
+      <div class="text-sm text-muted">Domains: 1, 2, 5</div>
+    </div>
+    <div class="concept-card" style="margin-bottom:0;">
+      <h3 style="font-size:0.85rem;margin:0 0 0.25rem;">🛠️ Scenario 4</h3>
+      <div style="font-weight:600;font-size:0.875rem;margin-bottom:0.25rem;">Developer Productivity with Claude</div>
+      <div class="text-sm text-muted">Domains: 2, 3, 1</div>
+    </div>
+    <div class="concept-card" style="margin-bottom:0;">
+      <h3 style="font-size:0.85rem;margin:0 0 0.25rem;">⚙️ Scenario 5</h3>
+      <div style="font-weight:600;font-size:0.875rem;margin-bottom:0.25rem;">Claude Code for CI/CD</div>
+      <div class="text-sm text-muted">Domains: 3, 4</div>
+    </div>
+    <div class="concept-card" style="margin-bottom:0;">
+      <h3 style="font-size:0.85rem;margin:0 0 0.25rem;">📊 Scenario 6</h3>
+      <div style="font-weight:600;font-size:0.875rem;margin-bottom:0.25rem;">Structured Data Extraction</div>
+      <div class="text-sm text-muted">Domains: 4, 5</div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="section-title">Exam Format</div>
+  <div class="passing-info">
+    <div class="passing-stat">
+      <div class="stat-val">720</div>
+      <div class="stat-label">Minimum passing score (of 1000)</div>
+    </div>
+    <div class="passing-stat">
+      <div class="stat-val">4</div>
+      <div class="stat-label">Options per question (one correct)</div>
+    </div>
+    <div class="passing-stat">
+      <div class="stat-val">4/6</div>
+      <div class="stat-label">Scenarios selected at random</div>
+    </div>
+    <div class="passing-stat">
+      <div class="stat-val">0</div>
+      <div class="stat-label">Penalty for guessing (guess freely)</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
