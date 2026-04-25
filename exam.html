@@ -322,14 +322,14 @@ const QUESTIONS = [
     options: [
       { id: 'A', text: "Emit multiple Task tool calls in a single coordinator response." },
       { id: 'B', text: "Emit Task tool calls in separate sequential turns, one per turn." },
-      { id: 'C', text: "Use fork_session for each subagent, creating independent branches." },
+      { id: 'C', text: "Use --fork-session for each subagent, creating independent branches." },
       { id: 'D', text: "Set allowedTools to include multiple agent type identifiers." }
     ],
     correct: 'A',
-    explanation: "Parallel subagent execution requires emitting multiple Task tool calls in a SINGLE coordinator response turn. The SDK then executes them simultaneously. Emitting calls across separate turns results in sequential execution (each waits for the previous). fork_session is for exploring divergent approaches from a shared baseline, not multi-agent coordination. allowedTools controls which tools an agent can use, not parallelism.",
+    explanation: "Parallel subagent execution requires emitting multiple Task tool calls in a SINGLE coordinator response turn. The SDK then executes them simultaneously. Emitting calls across separate turns results in sequential execution (each waits for the previous). --fork-session is a CLI flag for creating a new session ID when resuming, not a multi-agent coordination mechanism. allowedTools controls which tools an agent can use, not parallelism.",
     whyWrong: {
-      B: "Separate turns = sequential execution. The SDK executes Task calls in parallel only when they appear in the same response turn.",
-      C: "fork_session creates independent branches from a shared analysis baseline — used for comparing approaches, not for parallel research coordination.",
+      B: "Separate turns = sequential execution. The SDK executes Task tool calls in parallel only when they appear in the same response turn.",
+      C: "--fork-session is a CLI flag used with --resume to create a new session ID instead of reusing the original — it has nothing to do with parallel subagent coordination.",
       D: "allowedTools restricts which tools an agent can access. It has no bearing on spawning subagents in parallel. 'Task' must be in allowedTools for spawning to work at all."
     },
     studyLinks: [{ text: "Context & Spawning", anchor: "d1-context-passing" }],
@@ -339,13 +339,13 @@ const QUESTIONS = [
     id: 15, domain: 1,
     question: "A subagent in a multi-agent system needs the web search results produced by a prior agent. How should these results be provided to the subagent?",
     options: [
-      { id: 'A', text: "Include the results directly in the subagent's Task prompt." },
+      { id: 'A', text: "Include the results directly in the subagent's Task tool prompt." },
       { id: 'B', text: "Store results in a shared global variable accessible to all subagents." },
       { id: 'C', text: "The coordinator automatically forwards its conversation history to all spawned subagents." },
       { id: 'D', text: "Use --resume to give the subagent access to the prior agent's session." }
     ],
     correct: 'A',
-    explanation: "Subagents have isolated context — they do NOT automatically inherit the coordinator's conversation history or any shared state. Results must be explicitly included in the Task prompt. Subagents can't access global variables or other agents' sessions. --resume is for resuming named human-facing sessions, not for cross-agent context sharing.",
+    explanation: "Subagents have isolated context — they do NOT automatically inherit the coordinator's conversation history or any shared state. Results must be explicitly included in the Task tool prompt string (the only channel from parent to subagent). Subagents can't access global variables or other agents' sessions. --resume is for resuming named human-facing sessions, not for cross-agent context sharing.",
     whyWrong: {
       B: "The Claude Agent SDK has no shared global variable mechanism between subagents. All context must be passed explicitly.",
       C: "This is a common misconception — subagents do NOT automatically inherit parent context. Context isolation is a fundamental characteristic of the multi-agent pattern.",
@@ -375,19 +375,19 @@ const QUESTIONS = [
   },
   {
     id: 17, domain: 1,
-    question: "Which scenario is the best use case for fork_session?",
+    question: "Which scenario is the best use case for the --fork-session CLI flag?",
     options: [
-      { id: 'A', text: "Exploring two different refactoring approaches from the same shared codebase analysis baseline." },
-      { id: 'B', text: "Resuming an investigation after new commits were pushed to the repository." },
+      { id: 'A', text: "Creating a new session ID when resuming, so you branch off from a prior session without overwriting it." },
+      { id: 'B', text: "Resuming an investigation and continuing to write into the original session." },
       { id: 'C', text: "Spawning web search and document analysis subagents simultaneously." },
-      { id: 'D', text: "Continuing the same investigation across multiple work sessions over several days." }
+      { id: 'D', text: "Starting a completely fresh session with no prior context." }
     ],
     correct: 'A',
-    explanation: "fork_session creates independent branches from a shared analysis baseline — perfect for comparing two divergent approaches without contaminating each other. Changes in one fork don't affect the other. Resuming after code changes = --resume. Parallel subagents = Task tool calls in single response. Multi-session continuation = --resume with session names.",
+    explanation: "--fork-session is a CLI flag used together with --resume (or --continue). Instead of resuming into the original session ID, it creates a new session ID branched from that point — so you can explore a divergent path without overwriting the original session. It is not an SDK tool; it is a CLI resume modifier. Parallel subagents use multiple Task tool calls in a single response. Starting fresh uses claude without --resume.",
     whyWrong: {
-      B: "After new commits, use --resume and explicitly inform the session about which files changed. fork_session is for divergent exploration, not continuation after external changes.",
-      C: "Parallel subagent spawning uses multiple Task tool calls in a single coordinator response — that's a different mechanism entirely from fork_session.",
-      D: "Multi-day continuation uses --resume with named sessions to continue where you left off — not fork_session, which is for parallel divergent exploration."
+      B: "Resuming and writing back to the original session is what --resume (without --fork-session) does.",
+      C: "Parallel subagent spawning uses multiple Task tool calls in a single coordinator response — a completely separate mechanism.",
+      D: "Starting a fresh session requires omitting --resume entirely. --fork-session always requires an existing session to fork from."
     },
     studyLinks: [{ text: "Session Management", anchor: "d1-sessions" }],
     docLinks: []
@@ -421,9 +421,9 @@ const QUESTIONS = [
       { id: 'D', text: "Modifying which tool the model chose to call." }
     ],
     correct: 'A',
-    explanation: "PostToolUse hooks intercept tool RESULTS after execution, before the model processes them — ideal for normalizing heterogeneous data formats. Blocking outgoing tool calls (pre-execution enforcement) uses tool call interception hooks (pre-execution, not post). Iteration caps are separate safety mechanisms. Modifying tool selection is not a hook capability.",
+    explanation: "PostToolUse hooks intercept tool RESULTS after execution, before the model processes them — ideal for normalizing heterogeneous data formats. Blocking outgoing tool calls (pre-execution enforcement) uses a PreToolUse hook. Iteration caps are separate safety mechanisms. Modifying tool selection is not a hook capability.",
     whyWrong: {
-      B: "Blocking outgoing tool calls requires a PRE-execution interception hook, not PostToolUse. PostToolUse runs after the tool has already executed.",
+      B: "Blocking outgoing tool calls requires a PreToolUse hook (pre-execution), not PostToolUse. PostToolUse runs after the tool has already executed.",
       C: "Iteration caps are typically implemented as a counter in the agentic loop control logic, not via hooks.",
       D: "Hooks intercept and transform data flowing through the pipeline; they don't redirect or replace the tool selection the model made."
     },
@@ -723,17 +723,17 @@ const QUESTIONS = [
     id: 35, domain: 3,
     question: "What does the argument-hint frontmatter option do in a SKILL.md file?",
     options: [
-      { id: 'A', text: "Prompts the developer to provide required parameters when invoking the skill without arguments." },
+      { id: 'A', text: "Displays a hint (e.g., '[issue-number]') in the slash-command autocomplete menu to indicate what argument to type." },
       { id: 'B', text: "Adds automatic argument validation before the skill executes." },
       { id: 'C', text: "Restricts which argument types can be passed to the skill at runtime." },
-      { id: 'D', text: "Generates inline documentation for the skill's parameters in the /help output." }
+      { id: 'D', text: "Interactively prompts the developer for required arguments when the skill is invoked without them." }
     ],
     correct: 'A',
-    explanation: "argument-hint is specifically for improving the developer experience when a skill requires arguments: if someone invokes the skill without providing required arguments, the hint prompts them for what they need. It's a UX enhancement, not a validation or restriction mechanism.",
+    explanation: "argument-hint is an autocomplete display hint — the text shown in the slash-command autocomplete menu (e.g., '[issue-number]' or '[filename] [format]') to tell the developer what argument to provide. It is not an interactive prompt at runtime, not a validator, and not a restriction mechanism. It purely improves the autocomplete UX.",
     whyWrong: {
-      B: "Argument validation is not performed by argument-hint. It's a prompt/hint, not a validator.",
-      C: "allowed-tools restricts tool access; argument-hint has nothing to do with restricting argument types.",
-      D: "argument-hint doesn't generate help documentation — it's an interactive prompt shown when arguments are missing at invocation time."
+      B: "argument-hint performs no validation. It is a display-only hint shown in the autocomplete menu.",
+      C: "allowed-tools controls tool access; argument-hint has nothing to do with restricting argument types at runtime.",
+      D: "argument-hint does not interactively prompt at invocation time — it is shown only in the autocomplete/slash-command picker UI before the user submits the command."
     },
     studyLinks: [{ text: "Commands & Skills", anchor: "d3-commands" }],
     docLinks: []
