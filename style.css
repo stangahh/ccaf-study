@@ -58,7 +58,7 @@ body {
   display: flex;
   align-items: center;
   gap: 2rem;
-  height: 56px;
+  height: 52px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -71,15 +71,37 @@ body {
   text-decoration: none;
   letter-spacing: -0.02em;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  line-height: 1;
 }
 
-.topnav-logo span { color: var(--accent); }
+.topnav-logo-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--accent);
+  border-radius: 5px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+.topnav-logo-text { color: #e2e8f0; }
+.topnav-logo-text span { color: var(--accent); }
 
 .topnav-links {
   display: flex;
   gap: 0.25rem;
   list-style: none;
   flex: 1;
+  margin: 0;
+  padding: 0;
 }
 
 .topnav-links a {
@@ -89,16 +111,51 @@ body {
   padding: 0.375rem 0.75rem;
   border-radius: 6px;
   transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .topnav-links a:hover { color: var(--sidebar-text); background: rgba(255,255,255,0.06); }
 .topnav-links a.active { color: #fff; background: rgba(255,255,255,0.1); }
 
+
+/* ── MOBILE SIDEBAR TOC ── */
+.mobile-toc-btn {
+  display: none;
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 150;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border: 1px solid #30363d;
+  border-radius: 24px;
+  padding: 0.5rem 1rem 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  font-family: inherit;
+  align-items: center;
+  gap: 0.375rem;
+  transition: background 0.15s, transform 0.1s;
+}
+.mobile-toc-btn:hover { background: #161b22; transform: translateY(-1px); }
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 140;
+}
+.sidebar-overlay.open { display: block; }
+
 /* ── LAYOUT: SIDEBAR + CONTENT ── */
 .layout {
   display: grid;
   grid-template-columns: 260px 1fr;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 52px);
 }
 
 .sidebar {
@@ -106,8 +163,8 @@ body {
   border-right: 1px solid #21262d;
   padding: 1.5rem 0;
   position: sticky;
-  top: 56px;
-  height: calc(100vh - 56px);
+  top: 52px;
+  height: calc(100vh - 52px);
   overflow-y: auto;
 }
 
@@ -743,9 +800,76 @@ li { font-size: 0.875rem; margin-bottom: 0.25rem; line-height: 1.55; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
+  /* Nav: two-row layout — logo row + links row */
+  .topnav {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 0.5rem 1rem;
+    gap: 0;
+    align-items: center;
+  }
+  .topnav-logo {
+    flex: 1;
+    padding: 0.25rem 0;
+    font-size: 0.9rem;
+  }
+  .topnav-logo-mark { width: 24px; height: 24px; font-size: 0.65rem; border-radius: 6px; }
+  .topnav-links {
+    width: 100%;
+    border-top: 1px solid #21262d;
+    margin-top: 0.375rem;
+    padding: 0.375rem 0 0.125rem;
+    gap: 0.125rem;
+    flex: none;
+  }
+  .topnav-links a {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  /* Layout */
   .layout { grid-template-columns: 1fr; }
-  .sidebar { display: none; }
-  .main-content { padding: 1.5rem 1rem; }
+  .sidebar {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(288px, 88vw);
+    z-index: 145;
+    height: 100dvh;
+  }
+  .sidebar.mobile-open { display: block; }
+  .mobile-toc-btn { display: flex; }
+
+  /* Prevent horizontal overflow */
+  .main-content {
+    padding: 1.5rem 1rem;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
   .exam-container { padding: 1.25rem 1rem; }
   .action-grid { grid-template-columns: 1fr; }
+
+  /* Overflow-safe text */
+  p, li, h1, h2, h3 { overflow-wrap: break-word; word-break: break-word; }
+  pre { max-width: 100%; overflow-x: auto; }
+
+  /* Tables: scrollable on mobile */
+  .compare-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  /* Exam controls: stack cleanly on mobile */
+  .exam-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+  }
+  .progress-bar-wrap { min-width: unset; }
+  .score-badge { text-align: right; }
 }

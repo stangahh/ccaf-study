@@ -45,10 +45,14 @@
 <body>
 
 <nav class="topnav">
-  <a href="index.html" class="topnav-logo">CCAF <span>Study Hub</span></a>
+  <a href="index.html" class="topnav-logo">
+    <span class="topnav-logo-mark">CC</span>
+    <span class="topnav-logo-text">CCAF <span>Study Hub</span></span>
+  </a>
   <ul class="topnav-links">
     <li><a href="index.html">Home</a></li>
     <li><a href="study.html" class="active">Study Guide</a></li>
+    <li><a href="scenarios.html">Scenarios</a></li>
     <li><a href="exam.html">Practice Exam</a></li>
   </ul>
 </nav>
@@ -1272,6 +1276,23 @@ const observer = new IntersectionObserver((entries) => {
 }, { rootMargin: '-20% 0px -70% 0px' });
 
 sections.forEach(s => observer.observe(s));
+
+// Mobile TOC sidebar
+const tocBtn = document.getElementById('mobile-toc-btn');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+const sidebar = document.querySelector('.sidebar');
+if (tocBtn) {
+  const openSidebar = () => { sidebar.classList.add('mobile-open'); sidebarOverlay.classList.add('open'); };
+  const closeSidebar = () => { sidebar.classList.remove('mobile-open'); sidebarOverlay.classList.remove('open'); };
+  tocBtn.addEventListener('click', openSidebar);
+  sidebarOverlay.addEventListener('click', closeSidebar);
+  sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeSidebar();
+  }));
+}
 </script>
+
+<button class="mobile-toc-btn" id="mobile-toc-btn" aria-label="Open contents">≡ Contents</button>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
 </body>
 </html>

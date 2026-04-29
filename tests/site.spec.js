@@ -2,9 +2,10 @@
 const { test, expect } = require('@playwright/test');
 const path = require('path');
 
-const INDEX   = `file://${path.resolve(__dirname, '..', 'index.html')}`;
-const STUDY   = `file://${path.resolve(__dirname, '..', 'study.html')}`;
-const EXAM    = `file://${path.resolve(__dirname, '..', 'exam.html')}`;
+const INDEX     = `file://${path.resolve(__dirname, '..', 'index.html')}`;
+const STUDY     = `file://${path.resolve(__dirname, '..', 'study.html')}`;
+const EXAM      = `file://${path.resolve(__dirname, '..', 'exam.html')}`;
+const SCENARIOS = `file://${path.resolve(__dirname, '..', 'scenarios.html')}`;
 
 // ---------------------------------------------------------------------------
 // index.html
@@ -300,5 +301,66 @@ test.describe('Practice exam — completing a filtered run', () => {
     const results = page.locator('#results, .results-area, .concept-card').last();
     const resultsText = await results.innerText();
     expect(resultsText).toMatch(/pass|fail|score/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// scenarios.html
+// ---------------------------------------------------------------------------
+test.describe('Scenarios page', () => {
+  test.beforeEach(async ({ page }) => { await page.goto(SCENARIOS); });
+
+  test('has correct title', async ({ page }) => {
+    await expect(page).toHaveTitle(/Scenarios/i);
+  });
+
+  test('nav includes Scenarios link marked active', async ({ page }) => {
+    const active = page.locator('nav a.active');
+    await expect(active).toHaveText(/Scenarios/i);
+  });
+
+  test('all six scenario sections present', async ({ page }) => {
+    for (let i = 1; i <= 6; i++) {
+      await expect(page.locator(`#scenario-${i}`)).toBeAttached();
+    }
+  });
+
+  test('sidebar has six scenario links', async ({ page }) => {
+    const links = page.locator('.sidebar a[href^="#scenario-"]');
+    await expect(links).toHaveCount(6);
+  });
+
+  test('scenario 1 shows MCP tool chips', async ({ page }) => {
+    const chips = page.locator('#scenario-1 .tool-chip');
+    const count = await chips.count();
+    expect(count).toBeGreaterThanOrEqual(4);
+  });
+
+  test('scenario context blocks are non-empty', async ({ page }) => {
+    const blocks = page.locator('.context-block');
+    await expect(blocks).toHaveCount(6);
+    const text = await blocks.first().innerText();
+    expect(text.length).toBeGreaterThan(50);
+  });
+
+  test('each scenario has domain pills', async ({ page }) => {
+    const pills = page.locator('.domain-pills');
+    await expect(pills).toHaveCount(6);
+  });
+
+  test('study-guide cross-links point to study.html anchors', async ({ page }) => {
+    const studyLinks = page.locator('a.btn[href*="study.html#"]');
+    const count = await studyLinks.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('homepage scenario tiles link to scenarios page', async ({ page }) => {
+    await page.goto(INDEX);
+    const tile = page.locator('a[href="scenarios.html#scenario-1"]');
+    await expect(tile).toBeAttached();
+  });
+
+  test('mobile Contents button is present', async ({ page }) => {
+    await expect(page.locator('#mobile-toc-btn')).toBeAttached();
   });
 });

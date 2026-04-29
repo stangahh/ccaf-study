@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Scenarios — CCAF</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .scenario-section { margin-bottom: 3.5rem; scroll-margin-top: 70px; }
+    .scenario-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.875rem;
+      border-bottom: 2px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .scenario-num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.625rem;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 0.25rem;
+    }
+    .s1-badge, .s3-badge { background: var(--d1-light); color: #a85e14; }
+    .s2-badge, .s5-badge { background: var(--d3-light); color: #1a7a45; }
+    .s4-badge            { background: var(--d2-light); color: #1a6fa3; }
+    .s6-badge            { background: var(--d4-light); color: #6b3285; }
+    .scenario-title { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.01em; margin: 0; line-height: 1.3; }
+    .scenario-emoji { font-size: 1.4rem; flex-shrink: 0; }
+
+    .context-block {
+      background: var(--neutral-light);
+      border-left: 3px solid var(--border);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 1rem 1.125rem;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    .context-block strong { color: var(--text); }
+
+    .arch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .arch-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.875rem 1rem;
+      box-shadow: var(--shadow);
+    }
+    .arch-card-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.375rem;
+    }
+    .arch-card-value { font-size: 0.85rem; font-weight: 600; line-height: 1.4; }
+
+    .tool-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin-bottom: 1rem;
+    }
+    .tool-chip {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.78rem;
+      background: #1e1e2e;
+      color: #a6e3a1;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .domain-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin-bottom: 1.25rem;
+    }
+    .domain-pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.2rem 0.625rem;
+      border-radius: 20px;
+    }
+    .d1-pill-sm { background: var(--d1-light); color: #a85e14; }
+    .d2-pill-sm { background: var(--d2-light); color: #1a6fa3; }
+    .d3-pill-sm { background: var(--d3-light); color: #1a7a45; }
+    .d4-pill-sm { background: var(--d4-light); color: #6b3285; }
+    .d5-pill-sm { background: var(--d5-light); color: #b02a1e; }
+
+    .test-list { padding-left: 0; list-style: none; margin-bottom: 1rem; }
+    .test-list li {
+      display: flex;
+      gap: 0.625rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+      line-height: 1.5;
+      align-items: flex-start;
+    }
+    .test-list li:last-child { border-bottom: none; }
+    .test-list li::before {
+      content: '→';
+      color: var(--accent);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 0.05em;
+    }
+
+    .scenario-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1.25rem;
+    }
+
+    @media (max-width: 768px) {
+      .arch-grid { grid-template-columns: 1fr 1fr; }
+      .scenario-title { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html" class="topnav-logo">
+    <span class="topnav-logo-mark">CC</span>
+    <span class="topnav-logo-text">CCAF <span>Study Hub</span></span>
+  </a>
+  <ul class="topnav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="study.html">Study Guide</a></li>
+    <li><a href="scenarios.html" class="active">Scenarios</a></li>
+    <li><a href="exam.html">Practice Exam</a></li>
+  </ul>
+</nav>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Exam Scenarios</div>
+      <p style="font-size:0.72rem;color:var(--sidebar-muted);padding:0 0.75rem 0.5rem;line-height:1.5;">4 of 6 selected at random on the real exam.</p>
+
+      <a href="#scenario-1" class="sidebar-domain-label d1"><span class="domain-dot"></span>1 · Customer Support</a>
+      <a href="#scenario-2" class="sidebar-domain-label d3" style="margin-top:0.25rem;"><span class="domain-dot" style="background:var(--d3)"></span>2 · Code Generation</a>
+      <a href="#scenario-3" class="sidebar-domain-label d1" style="margin-top:0.25rem;"><span class="domain-dot"></span>3 · Multi-Agent Research</a>
+      <a href="#scenario-4" class="sidebar-domain-label d2" style="margin-top:0.25rem;"><span class="domain-dot" style="background:var(--d2)"></span>4 · Dev Productivity</a>
+      <a href="#scenario-5" class="sidebar-domain-label d3" style="margin-top:0.25rem;"><span class="domain-dot" style="background:var(--d3)"></span>5 · CI/CD Integration</a>
+      <a href="#scenario-6" class="sidebar-domain-label d4" style="margin-top:0.25rem;"><span class="domain-dot" style="background:var(--d4)"></span>6 · Data Extraction</a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Quick Links</div>
+      <a href="study.html" class="sidebar-link">→ Study Guide</a>
+      <a href="exam.html" class="sidebar-link">→ Practice Exam</a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <h1 style="margin-bottom:0.375rem;">Exam Scenarios</h1>
+    <p class="text-muted" style="font-size:0.9rem;margin-bottom:2rem;">The real exam presents <strong>4 of these 6 scenarios</strong>, selected at random. Each scenario frames a set of scenario-based multiple choice questions. Study all 6 — you won't know which 4 will appear.</p>
+
+    <!-- ═══ SCENARIO 1 ═══ -->
+    <section class="scenario-section" id="scenario-1">
+      <div class="scenario-header">
+        <span class="scenario-emoji">🎧</span>
+        <span class="scenario-num s1-badge">Scenario 1</span>
+        <h2 class="scenario-title">Customer Support Resolution Agent</h2>
+      </div>
+
+      <div class="context-block">
+        You are building a <strong>customer support resolution agent</strong> using the Claude Agent SDK. The agent handles high-ambiguity requests like returns, billing disputes, and account issues. It has access to your backend systems through custom MCP tools: <code>get_customer</code>, <code>lookup_order</code>, <code>process_refund</code>, and <code>escalate_to_human</code>. Your target is 80%+ first-contact resolution while knowing when to escalate.
+      </div>
+
+      <div class="domain-pills">
+        <span class="domain-pill d1-pill-sm">D1 · Agentic Architecture</span>
+        <span class="domain-pill d2-pill-sm">D2 · Tool Design &amp; MCP</span>
+        <span class="domain-pill d5-pill-sm">D5 · Context &amp; Reliability</span>
+      </div>
+
+      <h3 style="margin-top:0;">MCP Tools</h3>
+      <div class="tool-row">
+        <span class="tool-chip">get_customer</span>
+        <span class="tool-chip">lookup_order</span>
+        <span class="tool-chip">process_refund</span>
+        <span class="tool-chip">escalate_to_human</span>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <div class="arch-card-label">Architecture</div>
+          <div class="arch-card-value">Claude Agent SDK + custom MCP server exposing 4 backend tools</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Key Constraint</div>
+          <div class="arch-card-value"><code>get_customer</code> must complete before <code>process_refund</code> — identity must be verified first</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Target</div>
+          <div class="arch-card-value">80%+ first-contact resolution; calibrated escalation for complex cases</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Risk</div>
+          <div class="arch-card-value">Mis-identified accounts → incorrect refunds; wrong escalation calibration</div>
+        </div>
+      </div>
+
+      <h3>What the Exam Tests</h3>
+      <ul class="test-list">
+        <li>When to enforce tool ordering <strong>programmatically</strong> (prerequisite gates) vs relying on prompt instructions — prompt instructions have non-zero failure rates for safety-critical sequences</li>
+        <li>How expanding tool descriptions with input formats, example queries, and boundary explanations reduces misrouting between similar tools (<code>get_customer</code> vs <code>lookup_order</code>)</li>
+        <li>Escalation calibration: adding explicit criteria + few-shot examples to calibrate when to resolve autonomously vs escalate</li>
+        <li>Structured handoff summaries: what to include when calling <code>escalate_to_human</code> (customer ID, root cause, refund amount, recommended action)</li>
+        <li><code>PostToolUse</code> hooks for normalizing heterogeneous data formats (Unix timestamps, ISO 8601, numeric status codes) before the agent processes them</li>
+        <li>Task decomposition for multi-concern requests: splitting multi-issue cases into distinct items, investigating in parallel, then synthesizing a unified resolution</li>
+      </ul>
+
+      <div class="scenario-actions">
+        <a href="exam.html?domain=1" class="btn btn-outline" style="font-size:0.8rem;">Practice D1 Questions</a>
+        <a href="exam.html?domain=2" class="btn btn-outline" style="font-size:0.8rem;">Practice D2 Questions</a>
+        <a href="study.html#d1-enforcement" class="btn btn-secondary" style="font-size:0.8rem;">Study: Enforcement &amp; Handoffs →</a>
+        <a href="study.html#d2-tool-design" class="btn btn-secondary" style="font-size:0.8rem;">Study: Tool Design →</a>
+      </div>
+    </section>
+
+    <!-- ═══ SCENARIO 2 ═══ -->
+    <section class="scenario-section" id="scenario-2">
+      <div class="scenario-header">
+        <span class="scenario-emoji">💻</span>
+        <span class="scenario-num s2-badge">Scenario 2</span>
+        <h2 class="scenario-title">Code Generation with Claude Code</h2>
+      </div>
+
+      <div class="context-block">
+        You are using <strong>Claude Code</strong> to accelerate software development. Your team uses it for code generation, refactoring, debugging, and documentation. You need to integrate it into your development workflow with custom slash commands, CLAUDE.md configurations, and understand when to use plan mode vs direct execution.
+      </div>
+
+      <div class="domain-pills">
+        <span class="domain-pill d3-pill-sm">D3 · Claude Code Config</span>
+        <span class="domain-pill d5-pill-sm">D5 · Context &amp; Reliability</span>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <div class="arch-card-label">Config Hierarchy</div>
+          <div class="arch-card-value"><code>~/.claude/CLAUDE.md</code> → project <code>CLAUDE.md</code> → directory <code>CLAUDE.md</code></div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Custom Commands</div>
+          <div class="arch-card-value"><code>.claude/commands/</code> (team, version-controlled) vs <code>~/.claude/commands/</code> (personal)</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Plan Mode</div>
+          <div class="arch-card-value">Architectural changes, library migrations, multi-file edits with valid alternatives</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Direct Execution</div>
+          <div class="arch-card-value">Well-scoped changes: single-file bug fix, adding one validation conditional</div>
+        </div>
+      </div>
+
+      <h3>What the Exam Tests</h3>
+      <ul class="test-list">
+        <li>CLAUDE.md hierarchy: which level (user / project / directory) controls what, and why user-level settings aren't shared with teammates</li>
+        <li>When to use plan mode vs direct execution — the triggering criteria (architectural decisions, multiple valid approaches, large-scale changes)</li>
+        <li>Custom slash commands and skills: <code>.claude/commands/</code> for team workflows, <code>context: fork</code> frontmatter to isolate verbose skill output from the main conversation</li>
+        <li>Path-specific rules via <code>.claude/rules/</code> with YAML <code>paths</code> frontmatter — load only when editing matching files</li>
+        <li>Session management: <code>--resume &lt;session-name&gt;</code> for resumption, <code>fork_session</code> for parallel exploration branches</li>
+        <li>When to start fresh with an injected summary vs resume (prior tool results stale after file modifications)</li>
+      </ul>
+
+      <div class="scenario-actions">
+        <a href="exam.html?domain=3" class="btn btn-outline" style="font-size:0.8rem;">Practice D3 Questions</a>
+        <a href="study.html#d3-claudemd" class="btn btn-secondary" style="font-size:0.8rem;">Study: CLAUDE.md Hierarchy →</a>
+        <a href="study.html#d3-planmode" class="btn btn-secondary" style="font-size:0.8rem;">Study: Plan Mode →</a>
+      </div>
+    </section>
+
+    <!-- ═══ SCENARIO 3 ═══ -->
+    <section class="scenario-section" id="scenario-3">
+      <div class="scenario-header">
+        <span class="scenario-emoji">🔬</span>
+        <span class="scenario-num s1-badge">Scenario 3</span>
+        <h2 class="scenario-title">Multi-Agent Research System</h2>
+      </div>
+
+      <div class="context-block">
+        You are building a <strong>multi-agent research system</strong> using the Claude Agent SDK. A coordinator agent delegates to specialized subagents: one searches the web, one analyzes documents, one synthesizes findings, and one generates reports. The system researches topics and produces comprehensive, cited reports.
+      </div>
+
+      <div class="domain-pills">
+        <span class="domain-pill d1-pill-sm">D1 · Agentic Architecture</span>
+        <span class="domain-pill d2-pill-sm">D2 · Tool Design &amp; MCP</span>
+        <span class="domain-pill d5-pill-sm">D5 · Context &amp; Reliability</span>
+      </div>
+
+      <h3 style="margin-top:0;">Subagent Roles</h3>
+      <div class="arch-grid">
+        <div class="arch-card">
+          <div class="arch-card-label">Coordinator</div>
+          <div class="arch-card-value">Decomposes query, delegates to subagents, aggregates results, evaluates coverage gaps</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Web Search Agent</div>
+          <div class="arch-card-value">Searches web for sources; returns structured results with URLs and excerpts</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Document Analysis Agent</div>
+          <div class="arch-card-value">Analyzes provided documents, extracts claims with page/source attribution</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Synthesis Agent</div>
+          <div class="arch-card-value">Combines findings from prior agents; may have a scoped <code>verify_fact</code> tool</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Report Agent</div>
+          <div class="arch-card-value">Generates final cited report from synthesis output</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Spawning Mechanism</div>
+          <div class="arch-card-value"><code>Task</code> tool — coordinator's <code>allowedTools</code> must include <code>"Task"</code></div>
+        </div>
+      </div>
+
+      <h3>What the Exam Tests</h3>
+      <ul class="test-list">
+        <li>Hub-and-spoke coordination: all inter-subagent communication routes through the coordinator for consistent error handling and observability</li>
+        <li>Context isolation: subagents do <strong>not</strong> inherit coordinator conversation history — context must be explicitly included in each subagent's prompt</li>
+        <li>Parallel vs sequential spawning: emitting multiple <code>Task</code> tool calls in a single coordinator response to run subagents in parallel</li>
+        <li>Scope partitioning: assigning distinct subtopics or source types to each subagent to minimize duplication</li>
+        <li>Citation provenance: using structured data formats to separate content from metadata (source URLs, document names, page numbers) when passing context between agents</li>
+        <li>Iterative refinement: coordinator evaluates synthesis gaps, re-delegates targeted queries, re-invokes synthesis until coverage is sufficient</li>
+        <li>Tool scoping: restricting subagent tool sets to their role (synthesis agent should not have web search tools)</li>
+      </ul>
+
+      <div class="scenario-actions">
+        <a href="exam.html?domain=1" class="btn btn-outline" style="font-size:0.8rem;">Practice D1 Questions</a>
+        <a href="study.html#d1-multi-agent" class="btn btn-secondary" style="font-size:0.8rem;">Study: Multi-Agent Patterns →</a>
+        <a href="study.html#d1-context-passing" class="btn btn-secondary" style="font-size:0.8rem;">Study: Context &amp; Spawning →</a>
+      </div>
+    </section>
+
+    <!-- ═══ SCENARIO 4 ═══ -->
+    <section class="scenario-section" id="scenario-4">
+      <div class="scenario-header">
+        <span class="scenario-emoji">🛠️</span>
+        <span class="scenario-num s4-badge">Scenario 4</span>
+        <h2 class="scenario-title">Developer Productivity with Claude</h2>
+      </div>
+
+      <div class="context-block">
+        You are building <strong>developer productivity tools</strong> using the Claude Agent SDK. The agent helps engineers explore unfamiliar codebases, understand legacy systems, generate boilerplate code, and automate repetitive tasks. It uses built-in tools (<code>Read</code>, <code>Write</code>, <code>Bash</code>, <code>Grep</code>, <code>Glob</code>) and integrates with Model Context Protocol (MCP) servers.
+      </div>
+
+      <div class="domain-pills">
+        <span class="domain-pill d2-pill-sm">D2 · Tool Design &amp; MCP</span>
+        <span class="domain-pill d3-pill-sm">D3 · Claude Code Config</span>
+        <span class="domain-pill d1-pill-sm">D1 · Agentic Architecture</span>
+      </div>
+
+      <h3 style="margin-top:0;">Built-in Tools</h3>
+      <div class="tool-row">
+        <span class="tool-chip">Read</span>
+        <span class="tool-chip">Write</span>
+        <span class="tool-chip">Edit</span>
+        <span class="tool-chip">Bash</span>
+        <span class="tool-chip">Grep</span>
+        <span class="tool-chip">Glob</span>
+        <span class="tool-chip">Task</span>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <div class="arch-card-label">Grep</div>
+          <div class="arch-card-value">Searching file <em>contents</em> for patterns: function names, error messages, import statements</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Glob</div>
+          <div class="arch-card-value">Finding files by <em>path pattern</em>: <code>**/*.test.tsx</code>, all files in a directory subtree</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Read + Write</div>
+          <div class="arch-card-value">Fallback when Edit fails due to non-unique text match; full file operations</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">MCP Scoping</div>
+          <div class="arch-card-value">Shared team tooling → <code>.mcp.json</code> (project-level); personal/experimental → <code>~/.claude.json</code></div>
+        </div>
+      </div>
+
+      <h3>What the Exam Tests</h3>
+      <ul class="test-list">
+        <li>Selecting the right built-in tool: Grep for content search, Glob for path patterns, Read for full file loads, Edit for targeted modifications</li>
+        <li>Incremental codebase understanding: start with Grep to find entry points, then Read to follow imports and trace flows — not reading all files upfront</li>
+        <li>Tool set size management: giving an agent 18 tools instead of 4–5 degrades selection reliability; agents with out-of-scope tools tend to misuse them</li>
+        <li>MCP server scoping: project-level <code>.mcp.json</code> for tools shared via version control; user-level <code>~/.claude.json</code> for personal/experimental servers</li>
+        <li>Enhancing MCP tool descriptions to prevent the agent from preferring built-in tools (like Grep) over more capable MCP-provided alternatives</li>
+        <li>Choosing community MCP servers over custom implementations for standard integrations (e.g., Jira)</li>
+      </ul>
+
+      <div class="scenario-actions">
+        <a href="exam.html?domain=2" class="btn btn-outline" style="font-size:0.8rem;">Practice D2 Questions</a>
+        <a href="study.html#d2-builtin" class="btn btn-secondary" style="font-size:0.8rem;">Study: Built-in Tools →</a>
+        <a href="study.html#d2-mcp" class="btn btn-secondary" style="font-size:0.8rem;">Study: MCP Integration →</a>
+      </div>
+    </section>
+
+    <!-- ═══ SCENARIO 5 ═══ -->
+    <section class="scenario-section" id="scenario-5">
+      <div class="scenario-header">
+        <span class="scenario-emoji">⚙️</span>
+        <span class="scenario-num s2-badge">Scenario 5</span>
+        <h2 class="scenario-title">Claude Code for Continuous Integration</h2>
+      </div>
+
+      <div class="context-block">
+        You are integrating <strong>Claude Code into your CI/CD pipeline</strong>. The system runs automated code reviews, generates test cases, and provides feedback on pull requests. You need to design prompts that provide actionable feedback and minimize false positives.
+      </div>
+
+      <div class="domain-pills">
+        <span class="domain-pill d3-pill-sm">D3 · Claude Code Config</span>
+        <span class="domain-pill d4-pill-sm">D4 · Prompt Engineering</span>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <div class="arch-card-label">Non-interactive Mode</div>
+          <div class="arch-card-value"><code>claude -p</code> / <code>claude --print</code> — prevents interactive input hangs in CI</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Structured Output</div>
+          <div class="arch-card-value"><code>--output-format json</code> with <code>--json-schema</code> for machine-parseable PR comment data</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">CI Context</div>
+          <div class="arch-card-value">CLAUDE.md provides testing standards, fixture conventions, review criteria to CI-invoked Claude Code</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Review Independence</div>
+          <div class="arch-card-value">Independent Claude instance (not the generator's session) catches more issues — no retained reasoning context</div>
+        </div>
+      </div>
+
+      <h3>What the Exam Tests</h3>
+      <ul class="test-list">
+        <li>The <code>-p</code> / <code>--print</code> flag: required for running Claude Code non-interactively in CI — prevents hangs waiting for user input</li>
+        <li><code>--output-format json</code> with <code>--json-schema</code>: produces structured findings that can be automatically posted as inline PR comments</li>
+        <li>Why the session that generated code is <strong>less effective</strong> at reviewing it — a model retains its generation reasoning context and is less likely to question its own decisions</li>
+        <li>Including prior review findings on re-runs to instruct Claude to report only new or still-unaddressed issues, avoiding duplicate comments</li>
+        <li>Providing existing test files in context so test generation avoids duplicating already-covered scenarios</li>
+        <li>Explicit criteria for what to flag: "flag only issues where code behavior contradicts documented requirements" beats "be conservative"</li>
+        <li>Temporarily disabling high false-positive categories to restore developer trust while improving prompts for those categories</li>
+      </ul>
+
+      <div class="scenario-actions">
+        <a href="exam.html?domain=3" class="btn btn-outline" style="font-size:0.8rem;">Practice D3 Questions</a>
+        <a href="exam.html?domain=4" class="btn btn-outline" style="font-size:0.8rem;">Practice D4 Questions</a>
+        <a href="study.html#d3-cicd" class="btn btn-secondary" style="font-size:0.8rem;">Study: CI/CD Integration →</a>
+        <a href="study.html#d4-criteria" class="btn btn-secondary" style="font-size:0.8rem;">Study: Explicit Criteria →</a>
+      </div>
+    </section>
+
+    <!-- ═══ SCENARIO 6 ═══ -->
+    <section class="scenario-section" id="scenario-6">
+      <div class="scenario-header">
+        <span class="scenario-emoji">📊</span>
+        <span class="scenario-num s6-badge">Scenario 6</span>
+        <h2 class="scenario-title">Structured Data Extraction</h2>
+      </div>
+
+      <div class="context-block">
+        You are building a <strong>structured data extraction system</strong> using Claude. The system extracts information from unstructured documents, validates the output using JSON schemas, and maintains high accuracy. It must handle edge cases gracefully and integrate with downstream systems.
+      </div>
+
+      <div class="domain-pills">
+        <span class="domain-pill d4-pill-sm">D4 · Prompt Engineering</span>
+        <span class="domain-pill d5-pill-sm">D5 · Context &amp; Reliability</span>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <div class="arch-card-label">Output Enforcement</div>
+          <div class="arch-card-value"><code>tool_use</code> with JSON schema as input parameters — eliminates syntax errors, guarantees structure</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">tool_choice Options</div>
+          <div class="arch-card-value"><code>"auto"</code> (may return text), <code>"any"</code> (must call a tool), <code>{"type":"tool","name":"..."}</code> (forced)</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Validation Loop</div>
+          <div class="arch-card-value">Append specific validation errors to retry prompt — model self-corrects format/structure mismatches</div>
+        </div>
+        <div class="arch-card">
+          <div class="arch-card-label">Batch API</div>
+          <div class="arch-card-value">50% cost savings, up to 24-hour processing window — for non-blocking, latency-tolerant workloads</div>
+        </div>
+      </div>
+
+      <h3>What the Exam Tests</h3>
+      <ul class="test-list">
+        <li><code>tool_use</code> with JSON schema is the most reliable approach for structured output — it eliminates syntax errors but <strong>does not prevent semantic errors</strong> (values in wrong fields, line items that don't sum to total)</li>
+        <li><code>tool_choice: "any"</code> guarantees the model calls a tool rather than returning conversational text — use when document type is unknown and multiple schemas exist</li>
+        <li>Designing optional (nullable) schema fields when source documents may not contain the information — prevents model from fabricating values to satisfy required fields</li>
+        <li>Retry-with-error-feedback: including the original document, failed extraction, and specific validation errors in the retry prompt for model self-correction</li>
+        <li>When retries are ineffective: if information is simply absent from the source document, retrying cannot produce it — address the schema or accept null</li>
+        <li>Few-shot examples with varied document structures reduce extraction failures from format diversity (inline citations vs bibliographies, measurement formats)</li>
+        <li>Batch API matching: use synchronous API for pre-merge checks (blocking); batch API for overnight document processing (non-blocking, latency-tolerant)</li>
+      </ul>
+
+      <div class="scenario-actions">
+        <a href="exam.html?domain=4" class="btn btn-outline" style="font-size:0.8rem;">Practice D4 Questions</a>
+        <a href="exam.html?domain=5" class="btn btn-outline" style="font-size:0.8rem;">Practice D5 Questions</a>
+        <a href="study.html#d4-tooluse" class="btn btn-secondary" style="font-size:0.8rem;">Study: Structured Output →</a>
+        <a href="study.html#d4-retry" class="btn btn-secondary" style="font-size:0.8rem;">Study: Validation &amp; Retry →</a>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<button class="mobile-toc-btn" id="mobile-toc-btn" aria-label="Open contents">≡ Contents</button>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<script>
+// Mobile TOC sidebar
+const tocBtn = document.getElementById('mobile-toc-btn');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+const sidebar = document.querySelector('.sidebar');
+if (tocBtn) {
+  const openSidebar = () => { sidebar.classList.add('mobile-open'); sidebarOverlay.classList.add('open'); };
+  const closeSidebar = () => { sidebar.classList.remove('mobile-open'); sidebarOverlay.classList.remove('open'); };
+  tocBtn.addEventListener('click', openSidebar);
+  sidebarOverlay.addEventListener('click', closeSidebar);
+  sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeSidebar();
+  }));
+}
+
+// Sidebar active link via intersection observer
+const sections = document.querySelectorAll('.scenario-section');
+const sidebarLinks = document.querySelectorAll('.sidebar a[href^="#"]');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      sidebarLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + entry.target.id) link.classList.add('active');
+      });
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
